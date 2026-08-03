@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Günlük Asistan",
+    "slug": "gunluk-asistan",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#4F46E5",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gunlukasistan.app"
+    },
+    "android": {
+      "package": "com.gunlukasistan.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#4F46E5",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "backgroundColor": "#4F46E5",
+          "imageWidth": 220
+        }
+      ]
+    ]
+  }
+}
