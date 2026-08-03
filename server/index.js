@@ -7,10 +7,11 @@ const Anthropic = require('@anthropic-ai/sdk');
 const app = express();
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from env
 
-// BACKEND_PORT: yerel geliştirme için tercih edilir (genel PORT değişkeniyle
-// çakışmayı önler). PORT: Render/Railway gibi hosting servislerinin otomatik
-// enjekte ettiği port numarası için geriye dönük uyumluluk.
-const PORT = process.env.BACKEND_PORT || process.env.PORT || 3000;
+// Render kendi ortamında RENDER=true değişkenini otomatik ayarlar; sadece o
+// durumda Render'ın verdiği PORT'u kullanıyoruz. Yerelde ise BACKEND_PORT
+// (veya varsayılan 3000) kullanılır — böylece başka araçların ortama
+// enjekte ettiği genel bir PORT değişkeniyle çakışma olmaz.
+const PORT = process.env.RENDER ? process.env.PORT : process.env.BACKEND_PORT || 3000;
 const MODEL = 'claude-haiku-4-5';
 
 const SYSTEM_PROMPT = `Sen "Günlük Asistan" uygulamasının duygu durumu analiz asistanısın.
