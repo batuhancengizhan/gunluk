@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { Alert, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { clearAllNotes, getNotes } from '../storage/notesStorage';
 import { formatNotesForExport } from '../utils/exportNotes';
+import { Note } from '../types/Note';
 import { ThemeColors, ThemeMode, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { BACKGROUND_THEMES } from '../constants/backgroundThemes';
@@ -14,6 +16,7 @@ import {
 } from '../services/notificationService';
 import { useAppLock } from '../context/AppLockContext';
 import PinSetupModal from '../components/PinSetupModal';
+import StatsGrid from '../components/StatsGrid';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: 'light', label: 'Açık' },
@@ -38,6 +41,13 @@ export default function SettingsScreen() {
   const [reminderHour, setReminderHour] = useState(20);
   const [reminderMinute, setReminderMinute] = useState(0);
   const [pinSetupVisible, setPinSetupVisible] = useState(false);
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      getNotes().then(setNotes);
+    }, [])
+  );
 
   useEffect(() => {
     getReminderSettings().then((settings) => {
@@ -123,6 +133,13 @@ export default function SettingsScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Ayarlar</Text>
+
+      {notes.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>İstatistikler</Text>
+          <StatsGrid notes={notes} />
+        </View>
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Görünüm</Text>
