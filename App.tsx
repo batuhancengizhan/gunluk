@@ -11,11 +11,14 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { BackgroundThemeProvider } from './src/context/BackgroundThemeContext';
+import { AppLockProvider, useAppLock } from './src/context/AppLockContext';
+import LockScreen from './src/components/LockScreen';
 
 const Tab = createBottomTabNavigator();
 
 function AppContent() {
   const { resolvedMode, colors } = useTheme();
+  const { isLocked } = useAppLock();
 
   const navigationTheme = {
     ...(resolvedMode === 'dark' ? DarkTheme : DefaultTheme),
@@ -68,6 +71,7 @@ function AppContent() {
           options={{ title: 'Ayarlar' }}
         />
       </Tab.Navigator>
+      {isLocked && <LockScreen />}
     </NavigationContainer>
   );
 }
@@ -76,7 +80,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <BackgroundThemeProvider>
-        <AppContent />
+        <AppLockProvider>
+          <AppContent />
+        </AppLockProvider>
       </BackgroundThemeProvider>
     </ThemeProvider>
   );

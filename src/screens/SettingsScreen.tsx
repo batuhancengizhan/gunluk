@@ -11,6 +11,8 @@ import {
   enableDailyReminder,
   getReminderSettings,
 } from '../services/notificationService';
+import { useAppLock } from '../context/AppLockContext';
+import PinSetupModal from '../components/PinSetupModal';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: 'light', label: 'Açık' },
@@ -28,11 +30,13 @@ const TIME_PRESETS: { label: string; hour: number; minute: number }[] = [
 export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const { backgroundThemeId, setBackgroundThemeId } = useBackgroundTheme();
+  const { lockEnabled, setPin, disableLock } = useAppLock();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderHour, setReminderHour] = useState(20);
   const [reminderMinute, setReminderMinute] = useState(0);
+  const [pinSetupVisible, setPinSetupVisible] = useState(false);
 
   useEffect(() => {
     getReminderSettings().then((settings) => {
@@ -65,6 +69,23 @@ export default function SettingsScreen() {
     if (reminderEnabled) {
       await enableDailyReminder(hour, minute);
     }
+  };
+
+  const handleToggleLock = (value: boolean) => {
+    if (value) {
+      setPinSetupVisible(true);
+    } else {
+      Alert.alert('Kilidi kapat', 'Uygulama kilidini kapatmak istediğine emin misin?', [
+        { text: 'Vazgeç', style: 'cancel' },
+        { text: 'Kapat', style: 'destructive', onPress: () => disableLock() },
+      ]);
+    }
+  };
+
+  const handlePinConfirm = async (pin: string) => {
+    await setPin(pin);
+    setPinSetupVisible(false);
+    Alert.alert('Kilit Etkin', 'Uygulama artık bir PIN ile korunuyor.');
   };
 
   const handleClearAll = () => {
@@ -178,6 +199,32 @@ export default function SettingsScreen() {
           )}
         </View>
       </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Gizlilik</Text>
+        <View style={styles.infoCard}>
+          <View style={styles.reminderHeader}>
+            <View style={styles.reminderTextGroup}>
+              <Text style={styles.appName}>Uygulama Kilidi</Text>
+              <Text style={styles.reminderSubtext}>
+                Açıkken uygulamaya her girişte 4 haneli PIN istenir.
+              </Text>
+            </View>
+            <Switch
+              value={lockEnabled}
+              onValueChange={handleToggleLock}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.primaryText}
+            />
+          </View>
+        </View>
+      </View>
+
+      <PinSetupModal
+        visible={pinSetupVisible}
+        onClose={() => setPinSetupVisible(false)}
+        onConfirm={handlePinConfirm}
+      />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Hakkında</Text>
