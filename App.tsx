@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   DarkTheme,
@@ -13,12 +14,22 @@ import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { BackgroundThemeProvider } from './src/context/BackgroundThemeContext';
 import { AppLockProvider, useAppLock } from './src/context/AppLockContext';
 import LockScreen from './src/components/LockScreen';
+import OnboardingScreen, { hasSeenOnboarding } from './src/components/OnboardingScreen';
 
 const Tab = createBottomTabNavigator();
 
 function AppContent() {
   const { resolvedMode, colors } = useTheme();
   const { isLocked } = useAppLock();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  useEffect(() => {
+    hasSeenOnboarding().then((seen) => {
+      setShowOnboarding(!seen);
+      setOnboardingChecked(true);
+    });
+  }, []);
 
   const navigationTheme = {
     ...(resolvedMode === 'dark' ? DarkTheme : DefaultTheme),
@@ -72,6 +83,9 @@ function AppContent() {
         />
       </Tab.Navigator>
       {isLocked && <LockScreen />}
+      {onboardingChecked && showOnboarding && (
+        <OnboardingScreen onDone={() => setShowOnboarding(false)} />
+      )}
     </NavigationContainer>
   );
 }

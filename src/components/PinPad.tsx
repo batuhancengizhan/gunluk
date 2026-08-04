@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
+import { haptics } from '../utils/haptics';
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'];
 
@@ -17,6 +18,7 @@ export default function PinPad({ value, maxLength = 4, onChange }: Props) {
 
   const handlePress = (key: string) => {
     if (key === '') return;
+    haptics.selection();
     if (key === 'del') {
       onChange(value.slice(0, -1));
       return;

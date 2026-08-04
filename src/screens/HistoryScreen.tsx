@@ -17,6 +17,7 @@ import MoodCalendar from '../components/MoodCalendar';
 import NoteEditModal from '../components/NoteEditModal';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow, softShadow } from '../utils/shadow';
+import { haptics } from '../utils/haptics';
 
 function formatDate(iso: string) {
   const date = new Date(iso);
@@ -36,6 +37,7 @@ export default function HistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [sortAscending, setSortAscending] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   const loadNotes = useCallback(async () => {
@@ -55,14 +57,16 @@ export default function HistoryScreen() {
   );
 
   const filteredNotes = useMemo(() => {
-    return notes.filter((note) => {
+    const filtered = notes.filter((note) => {
       if (favoritesOnly && !note.isFavorite) return false;
       if (query.trim() && !note.text.toLowerCase().includes(query.trim().toLowerCase())) {
         return false;
       }
       return true;
     });
-  }, [notes, query, favoritesOnly]);
+    // notes zaten en yeniden en eskiye sıralı geliyor (bkz. notesStorage.getNotes)
+    return sortAscending ? [...filtered].reverse() : filtered;
+  }, [notes, query, favoritesOnly, sortAscending]);
 
   const handleDelete = (id: string) => {
     Alert.alert('Notu sil', 'Bu notu silmek istediğine emin misin?', [
@@ -72,6 +76,7 @@ export default function HistoryScreen() {
         style: 'destructive',
         onPress: async () => {
           await deleteNote(id);
+          haptics.warning();
           loadNotes();
         },
       },
@@ -79,8 +84,19 @@ export default function HistoryScreen() {
   };
 
   const handleToggleFavorite = async (id: string) => {
+    haptics.selection();
     await toggleFavorite(id);
     loadNotes();
+  };
+
+  const handleToggleSort = () => {
+    haptics.selection();
+    setSortAscending((prev) => !prev);
+  };
+
+  const handleToggleFavoritesOnly = () => {
+    haptics.selection();
+    setFavoritesOnly((prev) => !prev);
   };
 
   const handleSaveEdit = async (id: string, text: string) => {
@@ -123,8 +139,20 @@ export default function HistoryScreen() {
                 />
               </View>
               <TouchableOpacity
-                style={[styles.favoriteToggle, favoritesOnly && styles.favoriteToggleActive]}
-                onPress={() => setFavoritesOnly((prev) => !prev)}
+                style={styles.iconToggle}
+                onPress={handleToggleSort}
+                activeOpacity={0.85}
+              >
+                <Ionicons
+                  name={sortAscending ? 'arrow-up-outline' : 'arrow-down-outline'}
+                  size={18}
+                  color={colors.text}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.iconToggle, favoritesOnly && styles.favoriteToggleActive]}
+                onPress={handleToggleFavoritesOnly}
+                activeOpacity={0.85}
               >
                 <Ionicons
                   name={favoritesOnly ? 'star' : 'star-outline'}
@@ -208,17 +236,20 @@ function getStyles(colors: ThemeColors) {
       fontSize: 14.5,
       color: colors.text,
     },
-    favoriteToggle: {
+    iconToggle: {
       width: 42,
       height: 42,
       borderRadius: 12,
-      backgroundColor: colors.favoriteBg,
+      backgroundColor: colors.card,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
       ...softShadow(colors),
     },
     favoriteToggleActive: {
       backgroundColor: colors.favorite,
+      borderColor: colors.favorite,
     },
     noResultsText: {
       textAlign: 'center',

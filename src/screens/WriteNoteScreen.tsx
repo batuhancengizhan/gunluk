@@ -18,6 +18,7 @@ import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { calculateStreak } from '../utils/streak';
 import { cardShadow, softShadow } from '../utils/shadow';
 import { getRandomPrompts } from '../constants/writingPrompts';
+import { haptics } from '../utils/haptics';
 
 const MOODS = ['😊', '😌', '😐', '😢', '😡', '😴', '🥳', '😰'];
 
@@ -39,14 +40,26 @@ export default function WriteNoteScreen() {
     }, [])
   );
 
+  const wordCount = useMemo(() => {
+    const trimmed = text.trim();
+    return trimmed ? trimmed.split(/\s+/).length : 0;
+  }, [text]);
+
   const handlePromptPress = (prompt: string) => {
+    haptics.selection();
     setText((prev) => (prev ? prev : `${prompt}\n`));
     inputRef.current?.focus();
+  };
+
+  const handleMoodPress = (emoji: string) => {
+    haptics.selection();
+    setMood((prev) => (prev === emoji ? undefined : emoji));
   };
 
   const handleSave = async () => {
     const trimmed = text.trim();
     if (!trimmed) {
+      haptics.warning();
       Alert.alert('Boş not', 'Kaydetmeden önce bir şeyler yazmalısın.');
       return;
     }
@@ -57,6 +70,7 @@ export default function WriteNoteScreen() {
       setMood(undefined);
       const notes = await getNotes();
       setStreak(calculateStreak(notes));
+      haptics.success();
       Alert.alert('Kaydedildi', 'Günlük notun kaydedildi.');
     } finally {
       setSaving(false);
@@ -83,7 +97,7 @@ export default function WriteNoteScreen() {
             <TouchableOpacity
               key={emoji}
               style={[styles.moodButton, mood === emoji && styles.moodButtonActive]}
-              onPress={() => setMood((prev) => (prev === emoji ? undefined : emoji))}
+              onPress={() => handleMoodPress(emoji)}
             >
               <Text style={styles.moodEmoji}>{emoji}</Text>
             </TouchableOpacity>
@@ -120,6 +134,9 @@ export default function WriteNoteScreen() {
           onChangeText={setText}
           textAlignVertical="top"
         />
+        {text.length > 0 && (
+          <Text style={styles.wordCount}>{wordCount} kelime</Text>
+        )}
         <TouchableOpacity
           style={[styles.button, saving && styles.buttonDisabled]}
           onPress={handleSave}
@@ -225,6 +242,12 @@ function getStyles(colors: ThemeColors) {
       backgroundColor: colors.card,
       color: colors.text,
       ...cardShadow(colors),
+    },
+    wordCount: {
+      fontSize: 11.5,
+      color: colors.subtext,
+      textAlign: 'right',
+      marginTop: 6,
     },
     button: {
       backgroundColor: colors.primary,

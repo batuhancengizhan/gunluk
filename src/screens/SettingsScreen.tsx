@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { clearAllNotes } from '../storage/notesStorage';
+import { clearAllNotes, getNotes } from '../storage/notesStorage';
+import { formatNotesForExport } from '../utils/exportNotes';
 import { ThemeColors, ThemeMode, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { BACKGROUND_THEMES } from '../constants/backgroundThemes';
@@ -86,6 +87,19 @@ export default function SettingsScreen() {
     await setPin(pin);
     setPinSetupVisible(false);
     Alert.alert('Kilit Etkin', 'Uygulama artık bir PIN ile korunuyor.');
+  };
+
+  const handleExport = async () => {
+    const notes = await getNotes();
+    if (notes.length === 0) {
+      Alert.alert('Not yok', 'Dışa aktarılacak henüz bir notun yok.');
+      return;
+    }
+    try {
+      await Share.share({ message: formatNotesForExport(notes) });
+    } catch {
+      Alert.alert('Hata', 'Notlar dışa aktarılamadı.');
+    }
   };
 
   const handleClearAll = () => {
@@ -240,7 +254,18 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Veri</Text>
-        <TouchableOpacity style={styles.dangerButton} onPress={handleClearAll} activeOpacity={0.85}>
+        <TouchableOpacity
+          style={styles.exportButton}
+          onPress={handleExport}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.exportButtonText}>Notları Dışa Aktar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.dangerButton, styles.dangerButtonSpacing]}
+          onPress={handleClearAll}
+          activeOpacity={0.85}
+        >
           <Text style={styles.dangerButtonText}>Tüm Notları Sil</Text>
         </TouchableOpacity>
       </View>
@@ -401,6 +426,23 @@ function getStyles(colors: ThemeColors) {
     },
     timePresetTextActive: {
       color: colors.primaryText,
+    },
+    exportButton: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      paddingVertical: 15,
+      alignItems: 'center',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      ...softShadow(colors),
+    },
+    exportButtonText: {
+      color: colors.text,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    dangerButtonSpacing: {
+      marginTop: 10,
     },
     dangerButton: {
       backgroundColor: colors.dangerBg,
