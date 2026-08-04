@@ -125,7 +125,7 @@ export default function HistoryScreen() {
         ListHeaderComponent={
           <>
             <WeeklySummaryCard notes={notes} />
-            <MoodCalendar notes={notes} />
+            <MoodCalendar notes={notes} onDayPress={setEditingNote} />
 
             <View style={styles.searchRow}>
               <View style={styles.searchBox}>

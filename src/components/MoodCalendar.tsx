@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Note } from '../types/Note';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
+import { haptics } from '../utils/haptics';
 
 const WEEKS = 4;
 const WEEKDAY_LABELS = ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'];
@@ -10,7 +11,7 @@ interface DayCell {
   date: Date;
   key: string;
   mood?: string;
-  hasNote: boolean;
+  note?: Note;
   isFuture: boolean;
   isToday: boolean;
 }
@@ -29,15 +30,13 @@ function buildDays(notes: Note[]): DayCell[] {
   const start = new Date(endOfWeek);
   start.setDate(start.getDate() - (WEEKS * 7 - 1));
 
-  const moodByDay = new Map<string, string | undefined>();
-  const hasNoteByDay = new Set<string>();
+  const noteByDay = new Map<string, Note>();
   // Notlar en yeniden en eskiye sıralı geliyor; ilk rastladığımız (en yeni)
-  // notun mood'unu o gün için kullanırız.
+  // notu o gün için kullanırız.
   for (const note of notes) {
     const k = dayKey(new Date(note.createdAt));
-    hasNoteByDay.add(k);
-    if (!moodByDay.has(k)) {
-      moodByDay.set(k, note.mood);
+    if (!noteByDay.has(k)) {
+      noteByDay.set(k, note);
     }
   }
 
@@ -45,11 +44,12 @@ function buildDays(notes: Note[]): DayCell[] {
   const cursor = new Date(start);
   for (let i = 0; i < WEEKS * 7; i++) {
     const k = dayKey(cursor);
+    const note = noteByDay.get(k);
     days.push({
       date: new Date(cursor),
       key: k,
-      mood: moodByDay.get(k),
-      hasNote: hasNoteByDay.has(k),
+      mood: note?.mood,
+      note,
       isFuture: cursor.getTime() > today.getTime(),
       isToday: cursor.getTime() === today.getTime(),
     });
@@ -58,10 +58,21 @@ function buildDays(notes: Note[]): DayCell[] {
   return days;
 }
 
-export default function MoodCalendar({ notes }: { notes: Note[] }) {
+interface Props {
+  notes: Note[];
+  onDayPress?: (note: Note) => void;
+}
+
+export default function MoodCalendar({ notes, onDayPress }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const days = useMemo(() => buildDays(notes), [notes]);
+
+  const handlePress = (day: DayCell) => {
+    if (!day.note) return;
+    haptics.selection();
+    onDayPress?.(day.note);
+  };
 
   return (
     <View style={styles.container}>
@@ -75,21 +86,24 @@ export default function MoodCalendar({ notes }: { notes: Note[] }) {
       </View>
       <View style={styles.grid}>
         {days.map((day) => (
-          <View
+          <TouchableOpacity
             key={day.key}
+            activeOpacity={day.note ? 0.6 : 1}
+            disabled={!day.note}
+            onPress={() => handlePress(day)}
             style={[
               styles.cell,
               day.isFuture && styles.cellFuture,
-              day.hasNote && !day.mood && styles.cellNoMood,
+              day.note && !day.mood && styles.cellNoMood,
               day.isToday && styles.cellToday,
             ]}
           >
             {day.mood ? (
               <Text style={styles.cellEmoji}>{day.mood}</Text>
-            ) : day.hasNote ? (
+            ) : day.note ? (
               <View style={styles.cellDot} />
             ) : null}
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </View>
