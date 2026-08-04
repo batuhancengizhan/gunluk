@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Note } from '../types/Note';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
+import { cardShadow } from '../utils/shadow';
 
 interface Props {
   note: Note | null;
@@ -38,6 +39,7 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
     <Modal visible={!!note} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
+          <View style={styles.grabber} />
           <Text style={styles.title}>Notu Düzenle</Text>
           <TextInput
             style={styles.input}
@@ -71,23 +73,35 @@ function getStyles(colors: ThemeColors) {
     },
     sheet: {
       backgroundColor: colors.background,
-      borderTopLeftRadius: 16,
-      borderTopRightRadius: 16,
-      padding: 20,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 22,
+      paddingTop: 14,
       maxHeight: '70%',
+      ...cardShadow(colors),
+    },
+    grabber: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.border,
+      alignSelf: 'center',
+      marginBottom: 14,
     },
     title: {
-      fontSize: 18,
+      fontSize: 19,
       fontWeight: '700',
-      marginBottom: 12,
+      marginBottom: 14,
       color: colors.text,
+      letterSpacing: -0.2,
     },
     input: {
-      borderWidth: 1,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
-      borderRadius: 12,
-      padding: 14,
-      fontSize: 15,
+      borderRadius: 16,
+      padding: 16,
+      fontSize: 15.5,
+      lineHeight: 22,
       minHeight: 120,
       backgroundColor: colors.card,
       color: colors.text,
@@ -109,14 +123,14 @@ function getStyles(colors: ThemeColors) {
     },
     saveButton: {
       backgroundColor: colors.primary,
-      borderRadius: 10,
+      borderRadius: 12,
       paddingVertical: 12,
-      paddingHorizontal: 20,
+      paddingHorizontal: 22,
     },
     saveText: {
       color: colors.primaryText,
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: '700',
     },
   });
 }

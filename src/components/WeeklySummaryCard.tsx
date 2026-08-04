@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Note } from '../types/Note';
 import { Summary } from '../types/Summary';
 import { getWeeklySummary } from '../services/analysisService';
 import { getSummaries, saveSummary } from '../storage/summaryStorage';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
+import { cardShadow } from '../utils/shadow';
 
 function getLastWeekNotes(notes: Note[]): Note[] {
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -65,12 +67,18 @@ export default function WeeklySummaryCard({ notes }: { notes: Note[] }) {
 
   return (
     <View style={styles.card}>
+      <View style={styles.titleRow}>
+        <View style={styles.iconBadge}>
+          <Ionicons name="sparkles" size={14} color={colors.primary} />
+        </View>
+        <Text style={styles.eyebrow}>YAPAY ZEKA</Text>
+      </View>
       <Text style={styles.title}>Haftalık Duygu Özeti</Text>
 
       {weekNotes.length > 0 ? (
         <>
           <Text style={styles.subtitle}>
-            Son 7 gündeki {weekNotes.length} not baz alınarak yapay zeka ile özet çıkarılır.
+            Son 7 gündeki {weekNotes.length} not baz alınarak özet çıkarılır.
           </Text>
 
           {summary && <Text style={styles.summaryText}>{summary}</Text>}
@@ -80,6 +88,7 @@ export default function WeeklySummaryCard({ notes }: { notes: Note[] }) {
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleGenerate}
             disabled={loading}
+            activeOpacity={0.85}
           >
             {loading ? (
               <ActivityIndicator color={colors.primaryText} />
@@ -102,6 +111,11 @@ export default function WeeklySummaryCard({ notes }: { notes: Note[] }) {
           <Text style={styles.historyToggleText}>
             {showHistory ? 'Geçmiş özetleri gizle' : `Geçmiş özetler (${pastSummaries.length})`}
           </Text>
+          <Ionicons
+            name={showHistory ? 'chevron-up' : 'chevron-down'}
+            size={13}
+            color={colors.primary}
+          />
         </TouchableOpacity>
       )}
 
@@ -122,28 +136,50 @@ function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
       backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 16,
-      borderWidth: 1,
+      borderRadius: 18,
+      padding: 18,
+      marginBottom: 18,
+      borderWidth: StyleSheet.hairlineWidth,
       borderColor: colors.border,
+      ...cardShadow(colors),
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginBottom: 6,
+    },
+    iconBadge: {
+      width: 20,
+      height: 20,
+      borderRadius: 6,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    eyebrow: {
+      fontSize: 10.5,
+      fontWeight: '700',
+      color: colors.primary,
+      letterSpacing: 1.1,
     },
     title: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: '700',
       color: colors.text,
-      marginBottom: 4,
+      marginBottom: 5,
+      letterSpacing: -0.2,
     },
     subtitle: {
-      fontSize: 12,
+      fontSize: 12.5,
       color: colors.subtext,
-      marginBottom: 12,
+      marginBottom: 14,
+      lineHeight: 17,
     },
     summaryText: {
-      fontSize: 14,
+      fontSize: 14.5,
       color: colors.text,
-      lineHeight: 20,
-      marginBottom: 12,
+      lineHeight: 21,
+      marginBottom: 14,
     },
     errorText: {
       fontSize: 13,
@@ -152,39 +188,45 @@ function getStyles(colors: ThemeColors) {
     },
     button: {
       backgroundColor: colors.primary,
-      borderRadius: 10,
-      paddingVertical: 12,
+      borderRadius: 12,
+      paddingVertical: 13,
       alignItems: 'center',
+      ...cardShadow(colors),
     },
     buttonDisabled: {
       opacity: 0.7,
     },
     buttonText: {
       color: colors.primaryText,
-      fontSize: 14,
-      fontWeight: '600',
+      fontSize: 14.5,
+      fontWeight: '700',
+      letterSpacing: 0.2,
     },
     historyToggle: {
-      marginTop: 14,
+      marginTop: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
       alignSelf: 'flex-start',
     },
     historyToggleText: {
       color: colors.primary,
-      fontSize: 13,
+      fontSize: 12.5,
       fontWeight: '600',
-      textDecorationLine: 'underline',
     },
     historyItem: {
       marginTop: 12,
       paddingTop: 12,
-      borderTopWidth: 1,
+      borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
     },
     historyDate: {
-      fontSize: 11,
+      fontSize: 10.5,
       color: colors.primary,
       marginBottom: 4,
-      fontWeight: '600',
+      fontWeight: '700',
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
     },
     historyText: {
       fontSize: 13,

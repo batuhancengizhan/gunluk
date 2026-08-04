@@ -16,34 +16,37 @@ export interface ThemeColors {
   dangerBg: string;
   favorite: string;
   favoriteBg: string;
+  shadow: string;
 }
 
 const lightColors: ThemeColors = {
-  background: '#ffffff',
-  card: '#f4f4f8',
-  text: '#222222',
-  subtext: '#888888',
-  border: '#dddddd',
-  primary: '#4f46e5',
-  primaryText: '#ffffff',
-  danger: '#dc2626',
-  dangerBg: '#fee2e2',
-  favorite: '#f59e0b',
-  favoriteBg: '#fef3c7',
+  background: '#FAFAF9',
+  card: '#FFFFFF',
+  text: '#18181B',
+  subtext: '#71717A',
+  border: '#E9E9ED',
+  primary: '#4338CA',
+  primaryText: '#FFFFFF',
+  danger: '#DC2626',
+  dangerBg: '#FDEDED',
+  favorite: '#C08A1E',
+  favoriteBg: '#FBF3E1',
+  shadow: 'rgba(24, 24, 27, 0.08)',
 };
 
 const darkColors: ThemeColors = {
-  background: '#121212',
-  card: '#1e1e22',
-  text: '#f1f1f1',
-  subtext: '#9a9a9a',
-  border: '#333338',
-  primary: '#6366f1',
-  primaryText: '#ffffff',
-  danger: '#f87171',
-  dangerBg: '#3f1d1d',
-  favorite: '#fbbf24',
-  favoriteBg: '#3f2f0f',
+  background: '#0C0C0F',
+  card: '#18181C',
+  text: '#F4F4F5',
+  subtext: '#9A9AA5',
+  border: '#28282E',
+  primary: '#8583F5',
+  primaryText: '#0C0C0F',
+  danger: '#F87171',
+  dangerBg: '#2A1616',
+  favorite: '#E3BB56',
+  favoriteBg: '#2A2410',
+  shadow: 'rgba(0, 0, 0, 0.5)',
 };
 
 interface ThemeContextValue {

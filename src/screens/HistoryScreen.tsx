@@ -15,6 +15,7 @@ import { deleteNote, getNotes, toggleFavorite, updateNoteText } from '../storage
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
 import NoteEditModal from '../components/NoteEditModal';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
+import { cardShadow, softShadow } from '../utils/shadow';
 
 function formatDate(iso: string) {
   const date = new Date(iso);
@@ -143,7 +144,10 @@ export default function HistoryScreen() {
             onLongPress={() => handleDelete(item.id)}
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
+              <View style={styles.dateRow}>
+                {item.mood && <Text style={styles.moodBadge}>{item.mood}</Text>}
+                <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
+              </View>
               <TouchableOpacity
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 onPress={() => handleToggleFavorite(item.id)}
@@ -189,23 +193,27 @@ function getStyles(colors: ThemeColors) {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.card,
-      borderRadius: 10,
-      paddingHorizontal: 12,
+      borderRadius: 12,
+      paddingHorizontal: 14,
       gap: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      ...softShadow(colors),
     },
     searchInput: {
       flex: 1,
-      paddingVertical: 10,
-      fontSize: 14,
+      paddingVertical: 11,
+      fontSize: 14.5,
       color: colors.text,
     },
     favoriteToggle: {
-      width: 40,
-      height: 40,
-      borderRadius: 10,
+      width: 42,
+      height: 42,
+      borderRadius: 12,
       backgroundColor: colors.favoriteBg,
       alignItems: 'center',
       justifyContent: 'center',
+      ...softShadow(colors),
     },
     favoriteToggleActive: {
       backgroundColor: colors.favorite,
@@ -218,23 +226,38 @@ function getStyles(colors: ThemeColors) {
     },
     card: {
       backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 14,
+      borderRadius: 16,
+      padding: 16,
       marginBottom: 12,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      ...cardShadow(colors),
     },
     cardHeader: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 6,
+      marginBottom: 8,
+    },
+    dateRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    moodBadge: {
+      fontSize: 15,
     },
     date: {
-      fontSize: 12,
+      fontSize: 11.5,
+      fontWeight: '600',
       color: colors.subtext,
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
     },
     noteText: {
-      fontSize: 15,
+      fontSize: 15.5,
       color: colors.text,
+      lineHeight: 22,
     },
     emptyContainer: {
       flex: 1,

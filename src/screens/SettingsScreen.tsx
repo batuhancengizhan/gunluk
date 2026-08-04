@@ -1,7 +1,16 @@
-import { useMemo } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { clearAllNotes } from '../storage/notesStorage';
 import { ThemeColors, ThemeMode, useTheme } from '../context/ThemeContext';
+import { useBackgroundTheme } from '../context/BackgroundThemeContext';
+import { BACKGROUND_THEMES } from '../constants/backgroundThemes';
+import { cardShadow, softShadow } from '../utils/shadow';
+import {
+  disableDailyReminder,
+  enableDailyReminder,
+  getReminderSettings,
+} from '../services/notificationService';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: 'light', label: 'Açık' },
@@ -9,9 +18,54 @@ const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: 'system', label: 'Sistem' },
 ];
 
+const TIME_PRESETS: { label: string; hour: number; minute: number }[] = [
+  { label: 'Sabah 09:00', hour: 9, minute: 0 },
+  { label: 'Öğlen 13:00', hour: 13, minute: 0 },
+  { label: 'Akşam 20:00', hour: 20, minute: 0 },
+  { label: 'Gece 22:00', hour: 22, minute: 0 },
+];
+
 export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
+  const { backgroundThemeId, setBackgroundThemeId } = useBackgroundTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
+
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderHour, setReminderHour] = useState(20);
+  const [reminderMinute, setReminderMinute] = useState(0);
+
+  useEffect(() => {
+    getReminderSettings().then((settings) => {
+      setReminderEnabled(settings.enabled);
+      setReminderHour(settings.hour);
+      setReminderMinute(settings.minute);
+    });
+  }, []);
+
+  const handleToggleReminder = async (value: boolean) => {
+    if (value) {
+      const granted = await enableDailyReminder(reminderHour, reminderMinute);
+      if (!granted) {
+        Alert.alert(
+          'İzin gerekli',
+          'Hatırlatıcı gönderebilmemiz için bildirim iznine ihtiyacımız var. Telefon ayarlarından izin verebilirsin.'
+        );
+        return;
+      }
+      setReminderEnabled(true);
+    } else {
+      await disableDailyReminder();
+      setReminderEnabled(false);
+    }
+  };
+
+  const handlePickTime = async (hour: number, minute: number) => {
+    setReminderHour(hour);
+    setReminderMinute(minute);
+    if (reminderEnabled) {
+      await enableDailyReminder(hour, minute);
+    }
+  };
 
   const handleClearAll = () => {
     Alert.alert(
@@ -32,7 +86,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Ayarlar</Text>
 
       <View style={styles.section}>
@@ -45,6 +99,7 @@ export default function SettingsScreen() {
                 key={option.value}
                 style={[styles.themeOption, active && styles.themeOptionActive]}
                 onPress={() => setMode(option.value)}
+                activeOpacity={0.85}
               >
                 <Text style={[styles.themeOptionText, active && styles.themeOptionTextActive]}>
                   {option.label}
@@ -56,21 +111,93 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Not Yaz Arka Planı</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.swatchRow}>
+            {BACKGROUND_THEMES.map((bg) => {
+              const active = backgroundThemeId === bg.id;
+              return (
+                <TouchableOpacity
+                  key={bg.id}
+                  style={styles.swatchItem}
+                  onPress={() => setBackgroundThemeId(bg.id)}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient
+                    colors={bg.colors}
+                    style={[styles.swatch, active && styles.swatchActive]}
+                  />
+                  <Text style={[styles.swatchLabel, active && styles.swatchLabelActive]}>
+                    {bg.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </ScrollView>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Hatırlatıcılar</Text>
+        <View style={styles.infoCard}>
+          <View style={styles.reminderHeader}>
+            <View style={styles.reminderTextGroup}>
+              <Text style={styles.appName}>Günlük Yazma Hatırlatıcısı</Text>
+              <Text style={styles.reminderSubtext}>
+                Her gün seçtiğin saatte nazik bir hatırlatma alırsın.
+              </Text>
+            </View>
+            <Switch
+              value={reminderEnabled}
+              onValueChange={handleToggleReminder}
+              trackColor={{ false: colors.border, true: colors.primary }}
+              thumbColor={colors.primaryText}
+            />
+          </View>
+
+          {reminderEnabled && (
+            <View style={styles.timePresetRow}>
+              {TIME_PRESETS.map((preset) => {
+                const active = preset.hour === reminderHour && preset.minute === reminderMinute;
+                return (
+                  <TouchableOpacity
+                    key={preset.label}
+                    style={[styles.timePreset, active && styles.timePresetActive]}
+                    onPress={() => handlePickTime(preset.hour, preset.minute)}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[styles.timePresetText, active && styles.timePresetTextActive]}
+                    >
+                      {preset.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Hakkında</Text>
-        <Text style={styles.sectionText}>Günlük Asistan v1.0.0</Text>
-        <Text style={styles.sectionText}>
-          Notlarını yaz, geçmişini incele. Geçmiş Notlar sekmesinden yapay
-          zeka destekli haftalık duygu durumu özeti oluşturabilirsin.
-        </Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.appName}>Günlük Asistan</Text>
+          <Text style={styles.sectionText}>Sürüm 1.0.0</Text>
+          <Text style={[styles.sectionText, styles.infoBody]}>
+            Notlarını yaz, geçmişini incele. Geçmiş Notlar sekmesinden yapay
+            zeka destekli haftalık duygu durumu özeti oluşturabilirsin.
+          </Text>
+        </View>
       </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Veri</Text>
-        <TouchableOpacity style={styles.dangerButton} onPress={handleClearAll}>
+        <TouchableOpacity style={styles.dangerButton} onPress={handleClearAll} activeOpacity={0.85}>
           <Text style={styles.dangerButtonText}>Tüm Notları Sil</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -79,23 +206,28 @@ function getStyles(colors: ThemeColors) {
     container: {
       flex: 1,
       backgroundColor: colors.background,
+    },
+    content: {
       padding: 20,
+      paddingBottom: 40,
     },
     title: {
-      fontSize: 22,
-      fontWeight: '700',
-      marginBottom: 24,
+      fontSize: 26,
+      fontWeight: '800',
+      marginBottom: 26,
       marginTop: 8,
       color: colors.text,
+      letterSpacing: -0.4,
     },
     section: {
-      marginBottom: 28,
+      marginBottom: 26,
     },
     sectionTitle: {
-      fontSize: 14,
-      fontWeight: '600',
+      fontSize: 12,
+      fontWeight: '700',
       color: colors.subtext,
       textTransform: 'uppercase',
+      letterSpacing: 0.6,
       marginBottom: 10,
     },
     sectionText: {
@@ -107,14 +239,17 @@ function getStyles(colors: ThemeColors) {
     themeRow: {
       flexDirection: 'row',
       backgroundColor: colors.card,
-      borderRadius: 12,
+      borderRadius: 14,
       padding: 4,
       gap: 4,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      ...softShadow(colors),
     },
     themeOption: {
       flex: 1,
-      paddingVertical: 10,
-      borderRadius: 9,
+      paddingVertical: 11,
+      borderRadius: 11,
       alignItems: 'center',
     },
     themeOptionActive: {
@@ -128,16 +263,109 @@ function getStyles(colors: ThemeColors) {
     themeOptionTextActive: {
       color: colors.primaryText,
     },
+    swatchRow: {
+      flexDirection: 'row',
+      gap: 16,
+      paddingVertical: 4,
+    },
+    swatchItem: {
+      alignItems: 'center',
+      width: 64,
+    },
+    swatch: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      ...softShadow(colors),
+    },
+    swatchActive: {
+      borderColor: colors.primary,
+    },
+    swatchLabel: {
+      fontSize: 11,
+      color: colors.subtext,
+      marginTop: 7,
+      textAlign: 'center',
+    },
+    swatchLabelActive: {
+      color: colors.primary,
+      fontWeight: '700',
+    },
+    infoCard: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      ...softShadow(colors),
+    },
+    appName: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    infoBody: {
+      marginTop: 6,
+      color: colors.subtext,
+    },
+    reminderHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    reminderTextGroup: {
+      flex: 1,
+    },
+    reminderSubtext: {
+      fontSize: 12.5,
+      color: colors.subtext,
+      marginTop: 3,
+      lineHeight: 17,
+    },
+    timePresetRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginTop: 14,
+      paddingTop: 14,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    timePreset: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 10,
+      backgroundColor: colors.background,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    timePresetActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    timePresetText: {
+      fontSize: 12.5,
+      fontWeight: '600',
+      color: colors.subtext,
+    },
+    timePresetTextActive: {
+      color: colors.primaryText,
+    },
     dangerButton: {
       backgroundColor: colors.dangerBg,
-      borderRadius: 12,
-      paddingVertical: 14,
+      borderRadius: 14,
+      paddingVertical: 15,
       alignItems: 'center',
+      ...softShadow(colors),
     },
     dangerButtonText: {
       color: colors.danger,
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: '700',
     },
   });
 }

@@ -10,6 +10,7 @@ import WriteNoteScreen from './src/screens/WriteNoteScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { BackgroundThemeProvider } from './src/context/BackgroundThemeContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -74,7 +75,9 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <BackgroundThemeProvider>
+        <AppContent />
+      </BackgroundThemeProvider>
     </ThemeProvider>
   );
 }

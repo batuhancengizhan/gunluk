@@ -10,11 +10,12 @@ export async function getNotes(): Promise<Note[]> {
   return notes.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export async function addNote(text: string): Promise<Note> {
+export async function addNote(text: string, mood?: string): Promise<Note> {
   const notes = await getNotes();
   const note: Note = {
     id: Date.now().toString(),
     text,
+    mood,
     createdAt: new Date().toISOString(),
   };
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([note, ...notes]));

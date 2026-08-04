@@ -16,6 +16,7 @@ const MODEL = 'claude-haiku-4-5';
 
 const SYSTEM_PROMPT = `Sen "Günlük Asistan" uygulamasının duygu durumu analiz asistanısın.
 Kullanıcının bir haftalık günlük notlarını okuyup kısa, empatik bir Türkçe özet çıkarıyorsun.
+Bazı notların yanında kullanıcının seçtiği bir ruh hali emojisi bulunabilir (örn. 😊, 😢, 😡) — bunu notun metniyle birlikte değerlendir.
 Özet şunları içermeli:
 - Genel duygu eğilimi (örn. çoğunlukla pozitif, karışık, zorlayıcı bir hafta gibi)
 - Notlarda tekrar eden temalar veya konular
@@ -40,7 +41,8 @@ app.post('/analyze', async (req, res) => {
   const notesText = notes
     .map((note, index) => {
       const date = note?.createdAt ? new Date(note.createdAt).toLocaleDateString('tr-TR') : `Not ${index + 1}`;
-      return `[${date}] ${note?.text ?? ''}`;
+      const moodTag = note?.mood ? ` (ruh hali: ${note.mood})` : '';
+      return `[${date}]${moodTag} ${note?.text ?? ''}`;
     })
     .join('\n\n');
 
