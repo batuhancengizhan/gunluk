@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Modal,
+  Share,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Note } from '../types/Note';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow } from '../utils/shadow';
+import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
+import { haptics } from '../utils/haptics';
 
 interface Props {
   note: Note | null;
@@ -35,12 +39,32 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
     onSave(note.id, trimmed);
   };
 
+  const handleShare = () => {
+    if (!note) return;
+    haptics.selection();
+    const date = new Date(note.createdAt).toLocaleDateString('tr-TR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const moodTag = note.mood ? ` ${note.mood}` : '';
+    Share.share({ message: `${date}${moodTag}\n\n${text}` }).catch(() => {});
+  };
+
   return (
     <Modal visible={!!note} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.sheet}>
           <View style={styles.grabber} />
-          <Text style={styles.title}>Notu Düzenle</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>Notu Düzenle</Text>
+            <TouchableOpacity
+              onPress={handleShare}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons name="share-outline" size={20} color={colors.subtext} />
+            </TouchableOpacity>
+          </View>
           <TextInput
             style={styles.input}
             multiline
@@ -88,12 +112,16 @@ function getStyles(colors: ThemeColors) {
       alignSelf: 'center',
       marginBottom: 14,
     },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 14,
+    },
     title: {
       fontSize: 19,
-      fontWeight: '700',
-      marginBottom: 14,
+      fontFamily: FONT_DISPLAY_SEMIBOLD,
       color: colors.text,
-      letterSpacing: -0.2,
     },
     input: {
       borderWidth: StyleSheet.hairlineWidth,
