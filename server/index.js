@@ -2,10 +2,16 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const Anthropic = require('@anthropic-ai/sdk');
 
 const app = express();
 const client = new Anthropic(); // reads ANTHROPIC_API_KEY from env
+
+// Render bir ters proxy arkasında çalışır; gerçek istemci IP'sini
+// (X-Forwarded-For) doğru okuyabilmek için bunu etkinleştiriyoruz —
+// aksi halde rate limiting tüm istekleri tek bir IP sanıp yanlış çalışır.
+app.set('trust proxy', 1);
 
 // Render kendi ortamında RENDER=true değişkenini otomatik ayarlar; sadece o
 // durumda Render'ın verdiği PORT'u kullanıyoruz. Yerelde ise BACKEND_PORT
@@ -27,15 +33,40 @@ Asla tıbbi teşhis koyma veya tedavi önerisi verme; sadece bir gözlemci/dinle
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
+// Genel koruma: tüm rotalar için makul bir üst sınır.
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 60,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar dene.' },
+  })
+);
+
+// /analyze her seferinde bir yapay zeka isteği tetiklediği için (maliyetli),
+// ayrıca daha sıkı bir sınır uyguluyoruz.
+const analyzeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Saatlik özet oluşturma limitine ulaştın, lütfen daha sonra tekrar dene.' },
+});
+
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.post('/analyze', async (req, res) => {
+app.post('/analyze', analyzeLimiter, async (req, res) => {
   const { notes } = req.body ?? {};
 
   if (!Array.isArray(notes) || notes.length === 0) {
     return res.status(400).json({ error: 'notes alanı boş olamaz.' });
+  }
+
+  if (notes.length > 200) {
+    return res.status(400).json({ error: 'Tek seferde en fazla 200 not analiz edilebilir.' });
   }
 
   const notesText = notes
