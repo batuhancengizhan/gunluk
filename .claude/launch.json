@@ -18,6 +18,12 @@
       "runtimeExecutable": "C:\\Users\\DMC BİLGİSAYAR\\Desktop\\Günlük Yeni Uygulama\\.claude\\run-dev.cmd",
       "runtimeArgs": [],
       "port": 8081
+    },
+    {
+      "name": "mobile",
+      "runtimeExecutable": "C:\\Users\\DMC BİLGİSAYAR\\Desktop\\Günlük Yeni Uygulama\\.claude\\run-mobile.cmd",
+      "runtimeArgs": [],
+      "port": 8081
     }
   ]
 }
