@@ -1,10 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,6 +17,7 @@ import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { calculateStreak } from '../utils/streak';
 import { cardShadow, softShadow } from '../utils/shadow';
+import { getRandomPrompts } from '../constants/writingPrompts';
 
 const MOODS = ['😊', '😌', '😐', '😢', '😡', '😴', '🥳', '😰'];
 
@@ -27,12 +29,20 @@ export default function WriteNoteScreen() {
   const [mood, setMood] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [prompts, setPrompts] = useState<string[]>([]);
+  const inputRef = useRef<TextInput>(null);
 
   useFocusEffect(
     useCallback(() => {
       getNotes().then((notes) => setStreak(calculateStreak(notes)));
+      setPrompts(getRandomPrompts(3));
     }, [])
   );
+
+  const handlePromptPress = (prompt: string) => {
+    setText((prev) => (prev ? prev : `${prompt}\n`));
+    inputRef.current?.focus();
+  };
 
   const handleSave = async () => {
     const trimmed = text.trim();
@@ -80,7 +90,28 @@ export default function WriteNoteScreen() {
           ))}
         </View>
 
+        {text.length === 0 && prompts.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.promptScroll}
+            contentContainerStyle={styles.promptRow}
+          >
+            {prompts.map((prompt) => (
+              <TouchableOpacity
+                key={prompt}
+                style={styles.promptChip}
+                onPress={() => handlePromptPress(prompt)}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.promptChipText}>{prompt}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+
         <TextInput
+          ref={inputRef}
           style={styles.input}
           multiline
           placeholder="Günlük notunu buraya yaz..."
@@ -161,6 +192,27 @@ function getStyles(colors: ThemeColors) {
     },
     moodEmoji: {
       fontSize: 21,
+    },
+    promptScroll: {
+      marginBottom: 12,
+    },
+    promptRow: {
+      gap: 8,
+      paddingRight: 8,
+    },
+    promptChip: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      maxWidth: 220,
+    },
+    promptChipText: {
+      fontSize: 12.5,
+      color: colors.text,
+      fontWeight: '500',
     },
     input: {
       flex: 1,

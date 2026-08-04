@@ -13,6 +13,7 @@ import {
 import { Note } from '../types/Note';
 import { deleteNote, getNotes, toggleFavorite, updateNoteText } from '../storage/notesStorage';
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
+import MoodCalendar from '../components/MoodCalendar';
 import NoteEditModal from '../components/NoteEditModal';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow, softShadow } from '../utils/shadow';
@@ -108,6 +109,7 @@ export default function HistoryScreen() {
         ListHeaderComponent={
           <>
             <WeeklySummaryCard notes={notes} />
+            <MoodCalendar notes={notes} />
 
             <View style={styles.searchRow}>
               <View style={styles.searchBox}>
