@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import {
   DarkTheme,
@@ -7,6 +7,13 @@ import {
 } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+import {
+  useFonts,
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+  Fraunces_800ExtraBold,
+} from '@expo-google-fonts/fraunces';
 import WriteNoteScreen from './src/screens/WriteNoteScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
@@ -15,8 +22,11 @@ import { BackgroundThemeProvider } from './src/context/BackgroundThemeContext';
 import { AppLockProvider, useAppLock } from './src/context/AppLockContext';
 import LockScreen from './src/components/LockScreen';
 import OnboardingScreen, { hasSeenOnboarding } from './src/components/OnboardingScreen';
+import { FONT_DISPLAY_BOLD } from './src/constants/fonts';
 
 const Tab = createBottomTabNavigator();
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function AppContent() {
   const { resolvedMode, colors } = useTheme();
@@ -50,7 +60,7 @@ function AppContent() {
         screenOptions={({ route }) => ({
           headerTitleAlign: 'center',
           headerStyle: { backgroundColor: colors.background },
-          headerTitleStyle: { color: colors.text },
+          headerTitleStyle: { color: colors.text, fontFamily: FONT_DISPLAY_BOLD, fontSize: 19 },
           tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
           tabBarIcon: ({ color, size }) => {
             const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -91,6 +101,26 @@ function AppContent() {
 }
 
 export default function App() {
+  const [fontsLoaded, fontError] = useFonts({
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    Fraunces_800ExtraBold,
+  });
+
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded || fontError) {
+      await SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    onLayoutRootView();
+  }, [onLayoutRootView]);
+
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
+
   return (
     <ThemeProvider>
       <BackgroundThemeProvider>

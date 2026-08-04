@@ -5,6 +5,7 @@ import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useAppLock } from '../context/AppLockContext';
 import PinPad from './PinPad';
 import { haptics } from '../utils/haptics';
+import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 
 export default function LockScreen() {
   const { colors } = useTheme();
@@ -83,8 +84,8 @@ function getStyles(colors: ThemeColors) {
       marginBottom: 18,
     },
     title: {
-      fontSize: 19,
-      fontWeight: '700',
+      fontSize: 21,
+      fontFamily: FONT_DISPLAY_SEMIBOLD,
       color: colors.text,
       marginBottom: 6,
     },

@@ -8,6 +8,7 @@ import { getWeeklySummary } from '../services/analysisService';
 import { getSummaries, saveSummary } from '../storage/summaryStorage';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow } from '../utils/shadow';
+import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 
 function getLastWeekNotes(notes: Note[]): Note[] {
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -163,11 +164,10 @@ function getStyles(colors: ThemeColors) {
       letterSpacing: 1.1,
     },
     title: {
-      fontSize: 18,
-      fontWeight: '700',
+      fontSize: 19,
+      fontFamily: FONT_DISPLAY_SEMIBOLD,
       color: colors.text,
       marginBottom: 5,
-      letterSpacing: -0.2,
     },
     subtitle: {
       fontSize: 12.5,

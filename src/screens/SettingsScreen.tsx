@@ -15,6 +15,7 @@ import {
   getReminderSettings,
 } from '../services/notificationService';
 import { useAppLock } from '../context/AppLockContext';
+import { FONT_DISPLAY_EXTRABOLD } from '../constants/fonts';
 import PinSetupModal from '../components/PinSetupModal';
 import StatsGrid from '../components/StatsGrid';
 
@@ -301,12 +302,11 @@ function getStyles(colors: ThemeColors) {
       paddingBottom: 40,
     },
     title: {
-      fontSize: 26,
-      fontWeight: '800',
+      fontSize: 30,
+      fontFamily: FONT_DISPLAY_EXTRABOLD,
       marginBottom: 26,
       marginTop: 8,
       color: colors.text,
-      letterSpacing: -0.4,
     },
     section: {
       marginBottom: 26,

@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { haptics } from '../utils/haptics';
+import { FONT_DISPLAY_EXTRABOLD } from '../constants/fonts';
 
 const ONBOARDING_KEY = '@gunluk_asistan/onboarding_seen';
 
@@ -146,12 +147,11 @@ function getStyles(colors: ThemeColors) {
       marginBottom: 28,
     },
     title: {
-      fontSize: 24,
-      fontWeight: '800',
+      fontSize: 27,
+      fontFamily: FONT_DISPLAY_EXTRABOLD,
       color: colors.text,
       marginBottom: 12,
       textAlign: 'center',
-      letterSpacing: -0.4,
     },
     body: {
       fontSize: 15,

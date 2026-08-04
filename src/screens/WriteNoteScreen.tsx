@@ -19,6 +19,7 @@ import { calculateStreak } from '../utils/streak';
 import { cardShadow, softShadow } from '../utils/shadow';
 import { getRandomPrompts } from '../constants/writingPrompts';
 import { haptics } from '../utils/haptics';
+import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 
 const MOODS = ['😊', '😌', '😐', '😢', '😡', '😴', '🥳', '😰'];
 
@@ -167,11 +168,10 @@ function getStyles(colors: ThemeColors) {
       marginTop: 8,
     },
     title: {
-      fontSize: 22,
-      fontWeight: '700',
+      fontSize: 24,
+      fontFamily: FONT_DISPLAY_SEMIBOLD,
       color: colors.text,
       flexShrink: 1,
-      letterSpacing: -0.3,
     },
     streakBadge: {
       backgroundColor: colors.card,
