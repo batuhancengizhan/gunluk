@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   Alert,
   FlatList,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,6 +15,7 @@ import { Note } from '../types/Note';
 import { deleteNote, getNotes, toggleFavorite, updateNoteText } from '../storage/notesStorage';
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
 import MoodCalendar from '../components/MoodCalendar';
+import OnThisDayCard from '../components/OnThisDayCard';
 import NoteEditModal from '../components/NoteEditModal';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow, softShadow } from '../utils/shadow';
@@ -38,6 +40,7 @@ export default function HistoryScreen() {
   const [query, setQuery] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [sortAscending, setSortAscending] = useState(false);
+  const [moodFilter, setMoodFilter] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   const loadNotes = useCallback(async () => {
@@ -56,9 +59,22 @@ export default function HistoryScreen() {
     }, [loadNotes])
   );
 
+  const availableMoods = useMemo(() => {
+    const seen = new Set<string>();
+    const ordered: string[] = [];
+    for (const note of notes) {
+      if (note.mood && !seen.has(note.mood)) {
+        seen.add(note.mood);
+        ordered.push(note.mood);
+      }
+    }
+    return ordered;
+  }, [notes]);
+
   const filteredNotes = useMemo(() => {
     const filtered = notes.filter((note) => {
       if (favoritesOnly && !note.isFavorite) return false;
+      if (moodFilter && note.mood !== moodFilter) return false;
       if (query.trim() && !note.text.toLowerCase().includes(query.trim().toLowerCase())) {
         return false;
       }
@@ -66,7 +82,7 @@ export default function HistoryScreen() {
     });
     // notes zaten en yeniden en eskiye sıralı geliyor (bkz. notesStorage.getNotes)
     return sortAscending ? [...filtered].reverse() : filtered;
-  }, [notes, query, favoritesOnly, sortAscending]);
+  }, [notes, query, favoritesOnly, moodFilter, sortAscending]);
 
   const handleDelete = (id: string) => {
     Alert.alert('Notu sil', 'Bu notu silmek istediğine emin misin?', [
@@ -99,6 +115,11 @@ export default function HistoryScreen() {
     setFavoritesOnly((prev) => !prev);
   };
 
+  const handleMoodFilterPress = (emoji: string) => {
+    haptics.selection();
+    setMoodFilter((prev) => (prev === emoji ? null : emoji));
+  };
+
   const handleSaveEdit = async (id: string, text: string) => {
     await updateNoteText(id, text);
     setEditingNote(null);
@@ -124,6 +145,7 @@ export default function HistoryScreen() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
+            <OnThisDayCard notes={notes} onPress={setEditingNote} />
             <WeeklySummaryCard notes={notes} />
             <MoodCalendar notes={notes} onDayPress={setEditingNote} />
 
@@ -161,6 +183,29 @@ export default function HistoryScreen() {
                 />
               </TouchableOpacity>
             </View>
+
+            {availableMoods.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.moodFilterScroll}
+                contentContainerStyle={styles.moodFilterRow}
+              >
+                {availableMoods.map((emoji) => {
+                  const active = moodFilter === emoji;
+                  return (
+                    <TouchableOpacity
+                      key={emoji}
+                      style={[styles.moodChip, active && styles.moodChipActive]}
+                      onPress={() => handleMoodFilterPress(emoji)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.moodChipEmoji}>{emoji}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
 
             {filteredNotes.length === 0 && (
               <Text style={styles.noResultsText}>Eşleşen not bulunamadı.</Text>
@@ -250,6 +295,30 @@ function getStyles(colors: ThemeColors) {
     favoriteToggleActive: {
       backgroundColor: colors.favorite,
       borderColor: colors.favorite,
+    },
+    moodFilterScroll: {
+      marginBottom: 12,
+    },
+    moodFilterRow: {
+      gap: 8,
+      paddingRight: 8,
+    },
+    moodChip: {
+      width: 38,
+      height: 38,
+      borderRadius: 19,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.card,
+      borderWidth: 2,
+      borderColor: 'transparent',
+      ...softShadow(colors),
+    },
+    moodChipActive: {
+      borderColor: colors.primary,
+    },
+    moodChipEmoji: {
+      fontSize: 17,
     },
     noResultsText: {
       textAlign: 'center',
