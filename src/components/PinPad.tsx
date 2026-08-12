@@ -10,14 +10,15 @@ interface Props {
   value: string;
   maxLength?: number;
   onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export default function PinPad({ value, maxLength = 4, onChange }: Props) {
+export default function PinPad({ value, maxLength = 4, onChange, disabled = false }: Props) {
   const { colors } = useTheme();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const handlePress = (key: string) => {
-    if (key === '') return;
+    if (key === '' || disabled) return;
     haptics.selection();
     if (key === 'del') {
       onChange(value.slice(0, -1));
@@ -29,7 +30,7 @@ export default function PinPad({ value, maxLength = 4, onChange }: Props) {
   };
 
   return (
-    <View>
+    <View style={disabled && styles.disabled}>
       <View style={styles.dotsRow}>
         {Array.from({ length: maxLength }).map((_, i) => (
           <View key={i} style={[styles.dot, i < value.length && styles.dotFilled]} />
@@ -41,7 +42,7 @@ export default function PinPad({ value, maxLength = 4, onChange }: Props) {
             key={i}
             style={[styles.key, key === '' && styles.keyHidden]}
             onPress={() => handlePress(key)}
-            disabled={key === ''}
+            disabled={key === '' || disabled}
             activeOpacity={0.7}
           >
             {key === 'del' ? (
@@ -58,6 +59,9 @@ export default function PinPad({ value, maxLength = 4, onChange }: Props) {
 
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    disabled: {
+      opacity: 0.4,
+    },
     dotsRow: {
       flexDirection: 'row',
       justifyContent: 'center',

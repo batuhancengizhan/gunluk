@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
@@ -9,10 +9,27 @@ import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 
 export default function LockScreen() {
   const { colors } = useTheme();
-  const { unlock, disableLock } = useAppLock();
+  const { unlock, disableLock, lockoutUntil } = useAppLock();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!lockoutUntil) {
+      setRemainingSeconds(0);
+      return;
+    }
+    const tick = () => {
+      const secondsLeft = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+      setRemainingSeconds(secondsLeft);
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutUntil]);
+
+  const isLockedOut = remainingSeconds > 0;
 
   const handleChange = async (value: string) => {
     setPin(value);
@@ -42,17 +59,25 @@ export default function LockScreen() {
     );
   };
 
+  const subtitle = isLockedOut
+    ? `Çok fazla yanlış deneme. ${remainingSeconds} saniye sonra tekrar dene.`
+    : error
+    ? 'Yanlış PIN, tekrar dene.'
+    : 'Devam etmek için PIN kodunu gir';
+
   return (
     <View style={styles.container}>
       <View style={styles.iconWrap}>
-        <Ionicons name="lock-closed" size={28} color={colors.primary} />
+        <Ionicons
+          name={isLockedOut ? 'time-outline' : 'lock-closed'}
+          size={28}
+          color={colors.primary}
+        />
       </View>
       <Text style={styles.title}>Günlük Asistan Kilitli</Text>
-      <Text style={styles.subtitle}>
-        {error ? 'Yanlış PIN, tekrar dene.' : 'Devam etmek için PIN kodunu gir'}
-      </Text>
+      <Text style={[styles.subtitle, isLockedOut && styles.subtitleWarning]}>{subtitle}</Text>
       <View style={styles.padWrap}>
-        <PinPad value={pin} onChange={handleChange} />
+        <PinPad value={pin} onChange={handleChange} disabled={isLockedOut} />
       </View>
       <TouchableOpacity onPress={handleForgotPin} style={styles.forgotButton}>
         <Text style={styles.forgotText}>PIN'i unuttum</Text>
@@ -93,6 +118,12 @@ function getStyles(colors: ThemeColors) {
       fontSize: 13,
       color: colors.subtext,
       marginBottom: 8,
+      textAlign: 'center',
+      paddingHorizontal: 32,
+    },
+    subtitleWarning: {
+      color: colors.danger,
+      fontWeight: '600',
     },
     padWrap: {
       marginTop: 28,
