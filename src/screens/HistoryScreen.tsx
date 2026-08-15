@@ -20,6 +20,7 @@ import NoteEditModal from '../components/NoteEditModal';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow, softShadow } from '../utils/shadow';
 import { haptics } from '../utils/haptics';
+import { moodLabel } from '../constants/moods';
 
 function formatDate(iso: string) {
   const date = new Date(iso);
@@ -164,6 +165,13 @@ export default function HistoryScreen() {
                 style={styles.iconToggle}
                 onPress={handleToggleSort}
                 activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Sıralama yönü"
+                accessibilityHint={
+                  sortAscending
+                    ? 'En eski notlar üstte gösteriliyor, en yeniye çevirmek için dokun'
+                    : 'En yeni notlar üstte gösteriliyor, en eskiye çevirmek için dokun'
+                }
               >
                 <Ionicons
                   name={sortAscending ? 'arrow-up-outline' : 'arrow-down-outline'}
@@ -175,6 +183,9 @@ export default function HistoryScreen() {
                 style={[styles.iconToggle, favoritesOnly && styles.favoriteToggleActive]}
                 onPress={handleToggleFavoritesOnly}
                 activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel="Sadece favorileri göster"
+                accessibilityState={{ selected: favoritesOnly }}
               >
                 <Ionicons
                   name={favoritesOnly ? 'star' : 'star-outline'}
@@ -199,6 +210,9 @@ export default function HistoryScreen() {
                       style={[styles.moodChip, active && styles.moodChipActive]}
                       onPress={() => handleMoodFilterPress(emoji)}
                       activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${moodLabel(emoji)} ruh haline göre filtrele`}
+                      accessibilityState={{ selected: active }}
                     >
                       <Text style={styles.moodChipEmoji}>{emoji}</Text>
                     </TouchableOpacity>
@@ -217,6 +231,9 @@ export default function HistoryScreen() {
             style={styles.card}
             onPress={() => setEditingNote(item)}
             onLongPress={() => handleDelete(item.id)}
+            accessibilityRole="button"
+            accessibilityLabel={`${formatDate(item.createdAt)} tarihli not: ${item.text}`}
+            accessibilityHint="Düzenlemek için dokun, silmek için uzun bas"
           >
             <View style={styles.cardHeader}>
               <View style={styles.dateRow}>
@@ -226,6 +243,9 @@ export default function HistoryScreen() {
               <TouchableOpacity
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 onPress={() => handleToggleFavorite(item.id)}
+                accessibilityRole="button"
+                accessibilityLabel={item.isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+                accessibilityState={{ selected: item.isFavorite }}
               >
                 <Ionicons
                   name={item.isFavorite ? 'star' : 'star-outline'}

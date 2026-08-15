@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Note } from '../types/Note';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { haptics } from '../utils/haptics';
+import { moodLabel } from '../constants/moods';
 
 const WEEKS = 4;
 const WEEKDAY_LABELS = ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'];
@@ -91,6 +92,12 @@ export default function MoodCalendar({ notes, onDayPress }: Props) {
             activeOpacity={day.note ? 0.6 : 1}
             disabled={!day.note}
             onPress={() => handlePress(day)}
+            accessibilityRole={day.note ? 'button' : undefined}
+            accessibilityLabel={
+              day.note
+                ? `${day.date.toLocaleDateString('tr-TR')} tarihli not${day.mood ? `, ${moodLabel(day.mood)}` : ''}`
+                : undefined
+            }
             style={[
               styles.cell,
               day.isFuture && styles.cellFuture,

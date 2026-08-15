@@ -20,8 +20,7 @@ import { cardShadow, softShadow } from '../utils/shadow';
 import { getRandomPrompts } from '../constants/writingPrompts';
 import { haptics } from '../utils/haptics';
 import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
-
-const MOODS = ['😊', '😌', '😐', '😢', '😡', '😴', '🥳', '😰'];
+import { MOODS, moodLabel } from '../constants/moods';
 
 export default function WriteNoteScreen() {
   const { colors } = useTheme();
@@ -99,6 +98,9 @@ export default function WriteNoteScreen() {
               key={emoji}
               style={[styles.moodButton, mood === emoji && styles.moodButtonActive]}
               onPress={() => handleMoodPress(emoji)}
+              accessibilityRole="button"
+              accessibilityLabel={`${moodLabel(emoji)} ruh hali`}
+              accessibilityState={{ selected: mood === emoji }}
             >
               <Text style={styles.moodEmoji}>{emoji}</Text>
             </TouchableOpacity>

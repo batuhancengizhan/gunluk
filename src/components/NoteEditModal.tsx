@@ -61,6 +61,8 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
             <TouchableOpacity
               onPress={handleShare}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Notu paylaş"
             >
               <Ionicons name="share-outline" size={20} color={colors.subtext} />
             </TouchableOpacity>

@@ -153,6 +153,9 @@ export default function SettingsScreen() {
                 style={[styles.themeOption, active && styles.themeOptionActive]}
                 onPress={() => setMode(option.value)}
                 activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={`${option.label} tema`}
+                accessibilityState={{ selected: active }}
               >
                 <Text style={[styles.themeOptionText, active && styles.themeOptionTextActive]}>
                   {option.label}
@@ -175,6 +178,9 @@ export default function SettingsScreen() {
                   style={styles.swatchItem}
                   onPress={() => setBackgroundThemeId(bg.id)}
                   activeOpacity={0.85}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${bg.label} arka planı`}
+                  accessibilityState={{ selected: active }}
                 >
                   <LinearGradient
                     colors={bg.colors}
