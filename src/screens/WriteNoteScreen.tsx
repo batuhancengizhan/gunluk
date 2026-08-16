@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { addNote, getNotes } from '../storage/notesStorage';
+import BackgroundArt, { hasBackgroundArt } from '../components/BackgroundArt';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -91,8 +92,15 @@ export default function WriteNoteScreen() {
     }
   };
 
+  const hasArt = hasBackgroundArt(backgroundTheme.id);
+
   return (
-    <LinearGradient colors={backgroundTheme.colors} style={styles.gradientContainer}>
+    <View style={styles.gradientContainer}>
+      {hasArt && <BackgroundArt themeId={backgroundTheme.id} style={StyleSheet.absoluteFill} />}
+      <LinearGradient
+        colors={backgroundTheme.colors}
+        style={[StyleSheet.absoluteFill, hasArt && styles.gradientOverlay]}
+      />
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -163,7 +171,7 @@ export default function WriteNoteScreen() {
           <Text style={styles.buttonText}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
@@ -171,6 +179,9 @@ function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     gradientContainer: {
       flex: 1,
+    },
+    gradientOverlay: {
+      opacity: 0.55,
     },
     container: {
       flex: 1,
