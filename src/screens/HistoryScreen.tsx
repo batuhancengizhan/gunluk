@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   Alert,
   FlatList,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -141,8 +142,14 @@ export default function HistoryScreen() {
       <FlatList
         data={filteredNotes}
         keyExtractor={(item) => item.id}
-        onRefresh={loadNotes}
-        refreshing={loading}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadNotes}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           <>
