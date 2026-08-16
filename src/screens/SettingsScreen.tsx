@@ -278,6 +278,8 @@ export default function SettingsScreen() {
               onValueChange={handleToggleReminder}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.primaryText}
+              accessibilityLabel="Günlük yazma hatırlatıcısı"
+              accessibilityHint={reminderEnabled ? 'Kapatmak için dokun' : 'Açmak için dokun'}
             />
           </View>
 
@@ -340,6 +342,8 @@ export default function SettingsScreen() {
               onValueChange={handleToggleLock}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor={colors.primaryText}
+              accessibilityLabel="Uygulama kilidi"
+              accessibilityHint={lockEnabled ? 'Kapatmak için dokun' : 'Açmak için dokun'}
             />
           </View>
         </View>
