@@ -108,6 +108,11 @@ export default function WeeklySummaryCard({ notes }: { notes: Note[] }) {
         <TouchableOpacity
           style={styles.historyToggle}
           onPress={() => setShowHistory((prev) => !prev)}
+          accessibilityRole="button"
+          accessibilityLabel={
+            showHistory ? 'Geçmiş özetleri gizle' : `Geçmiş özetler, ${pastSummaries.length} adet`
+          }
+          accessibilityState={{ expanded: showHistory }}
         >
           <Text style={styles.historyToggleText}>
             {showHistory ? 'Geçmiş özetleri gizle' : `Geçmiş özetler (${pastSummaries.length})`}

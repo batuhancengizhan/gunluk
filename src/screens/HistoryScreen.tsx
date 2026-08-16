@@ -87,6 +87,7 @@ export default function HistoryScreen() {
   }, [notes, query, favoritesOnly, moodFilter, sortAscending]);
 
   const handleDelete = (id: string) => {
+    haptics.medium();
     Alert.alert('Notu sil', 'Bu notu silmek istediğine emin misin?', [
       { text: 'Vazgeç', style: 'cancel' },
       {
