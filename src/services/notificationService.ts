@@ -1,26 +1,39 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Note } from '../types/Note';
+import { getMoodTips } from './analysisService';
 
 const REMINDER_ENABLED_KEY = '@gunluk_asistan/reminder_enabled';
 const REMINDER_HOUR_KEY = '@gunluk_asistan/reminder_hour';
 const REMINDER_MINUTE_KEY = '@gunluk_asistan/reminder_minute';
+const TIPS_CACHE_KEY = '@gunluk_asistan/reminder_tips';
+const TIPS_UPDATED_AT_KEY = '@gunluk_asistan/reminder_tips_updated_at';
 const LEGACY_REMINDER_NOTIFICATION_ID = 'daily-journal-reminder';
 
-// Her gün farklı bir mesaj gelmesi için haftanın 7 gününe (Pazar..Cumartesi)
-// birebir eşlenen 7 mesaj — her biri kendi haftalık tetikleyicisiyle
-// zamanlanır, böylece mesaj gerçekten her gün değişir (bkz. enableDailyReminder).
-const REMINDER_MESSAGES = [
+const TIPS_REFRESH_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000; // 3 gün
+const RECENT_NOTES_FOR_TIPS = 30;
+const WEEKDAY_COUNT = 7;
+
+// Yapay zeka ile üretilen öneriler henüz hiç oluşturulmadıysa veya ağ
+// hatası olduysa kullanılan, sabit genel iyi-olma-hali hatırlatmaları.
+const FALLBACK_MESSAGES = [
   'Bugün nasıl geçti? Birkaç cümleyle günlüğüne not düşmeye ne dersin? 📝',
   'Küçük bir mola ver ve bugünün hislerini günlüğüne yaz. 🌿',
   'Kendine birkaç dakika ayır — bugünü nasıl hissettiğini yazmak iyi gelir. 💭',
-  'Günlük tutma alışkanlığı zihnini rahatlatır. Bugünü kaçırma! ✍️',
+  'Bir bardak su içmeyi unutma. 💧',
   'Bir cümle bile olsa, bugünü kaydetmeye değer. 🌙',
   'Duygularını yazıya dökmek, onları anlamanın ilk adımıdır. 😊',
-  'Haftalık özet için düzenli not almak faydalı — bugünü de ekle! ✨',
+  'Kısa bir yürüyüş zihnini tazeleyebilir. 🚶',
 ];
 
-const REMINDER_NOTIFICATION_IDS = REMINDER_MESSAGES.map((_, i) => `journal-reminder-${i}`);
+// Haftanın 7 gününe (Pazar..Cumartesi) sabit bildirim kimlikleri — içerik
+// (öneri metni) değişse de kimlikler sabit kalır, böylece her zaman aynı
+// 7 zamanlanmış bildirim güncellenir/iptal edilir.
+const REMINDER_NOTIFICATION_IDS = Array.from(
+  { length: WEEKDAY_COUNT },
+  (_, i) => `journal-reminder-${i}`
+);
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -68,20 +81,61 @@ async function ensureAndroidChannel() {
   }
 }
 
-export async function enableDailyReminder(hour: number, minute: number): Promise<boolean> {
-  const granted = await requestNotificationPermission();
-  if (!granted) return false;
+async function getCachedTips(): Promise<string[]> {
+  const raw = await AsyncStorage.getItem(TIPS_CACHE_KEY);
+  if (!raw) return FALLBACK_MESSAGES;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : FALLBACK_MESSAGES;
+  } catch {
+    return FALLBACK_MESSAGES;
+  }
+}
 
+export async function shouldRefreshMoodTips(): Promise<boolean> {
+  const updatedAt = await AsyncStorage.getItem(TIPS_UPDATED_AT_KEY);
+  if (!updatedAt) return true;
+  return Date.now() - Number(updatedAt) > TIPS_REFRESH_INTERVAL_MS;
+}
+
+// Son notlara bakarak yapay zekadan ruh haline uygun, kısa hatırlatma
+// önerileri ister ve önbelleğe alır. Hatırlatıcı o an açıksa, zamanlanmış
+// bildirimleri yeni içerikle günceller.
+export async function refreshMoodTips(notes: Note[]): Promise<string[]> {
+  try {
+    const recentNotes = notes.slice(0, RECENT_NOTES_FOR_TIPS);
+    const tips = await getMoodTips(recentNotes);
+    if (tips.length > 0) {
+      await AsyncStorage.setItem(TIPS_CACHE_KEY, JSON.stringify(tips));
+      await AsyncStorage.setItem(TIPS_UPDATED_AT_KEY, String(Date.now()));
+
+      const settings = await getReminderSettings();
+      if (settings.enabled) {
+        await scheduleReminderNotifications(settings.hour, settings.minute, tips);
+      }
+      return tips;
+    }
+  } catch {
+    // Sessizce yut — önbellekteki/varsayılan öneriler kullanılmaya devam eder.
+  }
+  return getCachedTips();
+}
+
+async function scheduleReminderNotifications(
+  hour: number,
+  minute: number,
+  tips: string[]
+): Promise<void> {
   await ensureAndroidChannel();
   await cancelAllReminderNotifications();
 
   await Promise.all(
-    REMINDER_MESSAGES.map((message, i) =>
+    REMINDER_NOTIFICATION_IDS.map((id, i) =>
       Notifications.scheduleNotificationAsync({
-        identifier: REMINDER_NOTIFICATION_IDS[i],
+        identifier: id,
         content: {
           title: 'Günlük Asistan',
-          body: message,
+          body: tips[i % tips.length],
           sound: true,
         },
         trigger: {
@@ -93,6 +147,14 @@ export async function enableDailyReminder(hour: number, minute: number): Promise
       })
     )
   );
+}
+
+export async function enableDailyReminder(hour: number, minute: number): Promise<boolean> {
+  const granted = await requestNotificationPermission();
+  if (!granted) return false;
+
+  const tips = await getCachedTips();
+  await scheduleReminderNotifications(hour, minute, tips);
 
   await AsyncStorage.setItem(REMINDER_ENABLED_KEY, 'true');
   await AsyncStorage.setItem(REMINDER_HOUR_KEY, String(hour));

@@ -30,6 +30,31 @@ Bazı notların yanında kullanıcının seçtiği bir ruh hali emojisi bulunabi
 3-5 cümle ile sınırlı tut, sıcak ve destekleyici bir ton kullan.
 Asla tıbbi teşhis koyma veya tedavi önerisi verme; sadece bir gözlemci/dinleyici gibi yorum yap.`;
 
+const TIPS_SYSTEM_PROMPT = `Sen "Günlük Asistan" uygulamasının kişisel bakım öğüt asistanısın.
+Kullanıcının son günlerdeki günlük notlarını ve ruh hali emojilerini (varsa) okuyup, gün içinde
+bildirim olarak gösterilecek KISA Türkçe hatırlatma cümleleri üretiyorsun.
+Kurallar:
+- Tam olarak 6 cümle üret.
+- Her cümle en fazla 80 karakter olsun, tek başına okunduğunda anlamlı bir bildirim gibi dursun.
+- Cümlelerin bir kısmı kullanıcının yakın zamandaki ruh haline uygun, sıcak ve destekleyici olsun
+  (örn. yorgun/üzgün/kaygılı bir eğilim varsa nazik bir teselli; mutlu/enerjikse bunu sürdürmesi için teşvik).
+- Cümlelerin bir kısmı da genel iyi olma hali hatırlatmaları olsun (su içmek, derin nefes almak,
+  kısa mola vermek, uyku, hareket etmek, günlüğe not düşmek gibi).
+- Ilımlı miktarda emoji kullanabilirsin, abartma.
+- Asla tıbbi teşhis koyma veya tedavi önerisi verme.
+- Notlarda hiçbir kişisel/hassas bilgiyi (isim, yer, olay detayı) tekrar etme; sadece genel bir ton/tema çıkar.
+Yanıtını SADECE şu JSON formatında ver, başka hiçbir açıklama veya markdown ekleme:
+{"tips": ["...", "...", "...", "...", "...", "..."]}`;
+
+const FALLBACK_TIPS = [
+  'Bir bardak su içmeyi unutma. 💧',
+  'Birkaç dakikana ayır, derin bir nefes al. 🌿',
+  'Bugün kendine küçük bir mola verebilirsin. ☕',
+  'Bir cümle bile olsa, bugünü günlüğüne not düşmeye değer. 📝',
+  'Az önce ne hissettiğini fark ettin mi? Kendine nazik ol. 💛',
+  'Kısa bir yürüyüş zihnini tazeleyebilir. 🚶',
+];
+
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
@@ -96,6 +121,76 @@ app.post('/analyze', analyzeLimiter, async (req, res) => {
 
     const textBlock = response.content.find((block) => block.type === 'text');
     return res.json({ summary: textBlock?.text ?? '' });
+  } catch (error) {
+    if (error instanceof Anthropic.RateLimitError) {
+      return res.status(429).json({ error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar dene.' });
+    }
+    if (error instanceof Anthropic.APIError) {
+      return res.status(502).json({ error: `Yapay zeka servisinde hata: ${error.message}` });
+    }
+    console.error(error);
+    return res.status(500).json({ error: 'Beklenmeyen bir hata oluştu.' });
+  }
+});
+
+function parseTipsFromText(text) {
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[0]);
+    if (!Array.isArray(parsed.tips)) return null;
+    const tips = parsed.tips
+      .filter((tip) => typeof tip === 'string' && tip.trim().length > 0)
+      .map((tip) => tip.trim().slice(0, 120));
+    return tips.length > 0 ? tips : null;
+  } catch {
+    return null;
+  }
+}
+
+app.post('/tips', analyzeLimiter, async (req, res) => {
+  const { notes } = req.body ?? {};
+
+  if (!Array.isArray(notes)) {
+    return res.status(400).json({ error: 'notes alanı bir dizi olmalı.' });
+  }
+
+  if (notes.length > 60) {
+    return res.status(400).json({ error: 'Tek seferde en fazla 60 not gönderilebilir.' });
+  }
+
+  if (notes.length === 0) {
+    return res.json({ tips: FALLBACK_TIPS });
+  }
+
+  const notesText = notes
+    .map((note, index) => {
+      const date = note?.createdAt ? new Date(note.createdAt).toLocaleDateString('tr-TR') : `Not ${index + 1}`;
+      const moodTag = note?.mood ? ` (ruh hali: ${note.mood})` : '';
+      return `[${date}]${moodTag} ${note?.text ?? ''}`;
+    })
+    .join('\n\n');
+
+  try {
+    const response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 512,
+      system: TIPS_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: `Aşağıdaki son günlük notlarına göre 6 kısa hatırlatma cümlesi üret:\n\n${notesText}`,
+        },
+      ],
+    });
+
+    if (response.stop_reason === 'refusal') {
+      return res.json({ tips: FALLBACK_TIPS });
+    }
+
+    const textBlock = response.content.find((block) => block.type === 'text');
+    const tips = textBlock?.text ? parseTipsFromText(textBlock.text) : null;
+    return res.json({ tips: tips ?? FALLBACK_TIPS });
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) {
       return res.status(429).json({ error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar dene.' });

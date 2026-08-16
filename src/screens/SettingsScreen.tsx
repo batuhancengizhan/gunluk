@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { Alert, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { clearAllNotes, getNotes } from '../storage/notesStorage';
 import { formatNotesForExport } from '../utils/exportNotes';
 import { Note } from '../types/Note';
@@ -13,6 +14,8 @@ import {
   disableDailyReminder,
   enableDailyReminder,
   getReminderSettings,
+  refreshMoodTips,
+  shouldRefreshMoodTips,
 } from '../services/notificationService';
 import { useAppLock } from '../context/AppLockContext';
 import { useToast } from '../context/ToastContext';
@@ -45,10 +48,17 @@ export default function SettingsScreen() {
   const [reminderMinute, setReminderMinute] = useState(0);
   const [pinSetupVisible, setPinSetupVisible] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [tipsRefreshing, setTipsRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      getNotes().then(setNotes);
+      getNotes().then(async (data) => {
+        setNotes(data);
+        const settings = await getReminderSettings();
+        if (settings.enabled && (await shouldRefreshMoodTips())) {
+          refreshMoodTips(data).catch(() => {});
+        }
+      });
     }, [])
   );
 
@@ -71,9 +81,22 @@ export default function SettingsScreen() {
         return;
       }
       setReminderEnabled(true);
+      refreshMoodTips(notes).catch(() => {});
     } else {
       await disableDailyReminder();
       setReminderEnabled(false);
+    }
+  };
+
+  const handleRefreshTips = async () => {
+    setTipsRefreshing(true);
+    try {
+      await refreshMoodTips(notes);
+      showToast('Öneriler ruh durumuna göre güncellendi.');
+    } catch {
+      showToast('Öneriler güncellenemedi, tekrar dene.');
+    } finally {
+      setTipsRefreshing(false);
     }
   };
 
@@ -205,7 +228,8 @@ export default function SettingsScreen() {
             <View style={styles.reminderTextGroup}>
               <Text style={styles.appName}>Günlük Yazma Hatırlatıcısı</Text>
               <Text style={styles.reminderSubtext}>
-                Her gün seçtiğin saatte nazik bir hatırlatma alırsın.
+                Yapay zeka, ruh haline göre kişiselleştirdiği öğütleri her gün
+                seçtiğin saatte gönderir.
               </Text>
             </View>
             <Switch
@@ -236,6 +260,26 @@ export default function SettingsScreen() {
                 );
               })}
             </View>
+          )}
+
+          {reminderEnabled && (
+            <TouchableOpacity
+              style={styles.refreshTipsButton}
+              onPress={handleRefreshTips}
+              disabled={tipsRefreshing}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Önerileri şimdi güncelle"
+            >
+              {tipsRefreshing ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Ionicons name="sparkles-outline" size={14} color={colors.primary} />
+              )}
+              <Text style={styles.refreshTipsText}>
+                {tipsRefreshing ? 'Öneriler güncelleniyor...' : 'Önerileri şimdi güncelle'}
+              </Text>
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -416,6 +460,21 @@ function getStyles(colors: ThemeColors) {
     },
     reminderTextGroup: {
       flex: 1,
+    },
+    refreshTipsButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      marginTop: 14,
+      paddingTop: 14,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
+    },
+    refreshTipsText: {
+      fontSize: 12.5,
+      fontWeight: '600',
+      color: colors.primary,
     },
     reminderSubtext: {
       fontSize: 12.5,
