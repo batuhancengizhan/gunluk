@@ -244,13 +244,14 @@ export default function HistoryScreen() {
             onPress={() => setEditingNote(item)}
             onLongPress={() => handleDelete(item)}
             accessibilityRole="button"
-            accessibilityLabel={`${formatDate(item.createdAt)} tarihli not: ${item.text}`}
+            accessibilityLabel={`${formatDate(item.createdAt)} tarihli not${item.updatedAt ? ' (düzenlendi)' : ''}: ${item.text}`}
             accessibilityHint="Düzenlemek için dokun, silmek için uzun bas"
           >
             <View style={styles.cardHeader}>
               <View style={styles.dateRow}>
                 {item.mood && <Text style={styles.moodBadge}>{item.mood}</Text>}
                 <Text style={styles.date}>{formatDate(item.createdAt)}</Text>
+                {item.updatedAt && <Text style={styles.editedTag}>· düzenlendi</Text>}
               </View>
               <TouchableOpacity
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -387,6 +388,12 @@ function getStyles(colors: ThemeColors) {
       color: colors.subtext,
       letterSpacing: 0.3,
       textTransform: 'uppercase',
+    },
+    editedTag: {
+      fontSize: 11.5,
+      fontWeight: '500',
+      color: colors.subtext,
+      fontStyle: 'italic',
     },
     noteText: {
       fontSize: 15.5,
