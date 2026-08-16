@@ -15,7 +15,7 @@ import { addNote, getNotes } from '../storage/notesStorage';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { useToast } from '../context/ToastContext';
-import { calculateStreak } from '../utils/streak';
+import { calculateStreak, getStreakMilestoneMessage } from '../utils/streak';
 import { cardShadow, softShadow } from '../utils/shadow';
 import { getRandomPrompts } from '../constants/writingPrompts';
 import { haptics } from '../utils/haptics';
@@ -70,9 +70,16 @@ export default function WriteNoteScreen() {
       setText('');
       setMood(undefined);
       const notes = await getNotes();
-      setStreak(calculateStreak(notes));
+      const newStreak = calculateStreak(notes);
+      setStreak(newStreak);
       haptics.success();
-      showToast('Günlük notun kaydedildi.');
+
+      const milestoneMessage = getStreakMilestoneMessage(newStreak);
+      if (milestoneMessage) {
+        showToast(milestoneMessage, { duration: 3600 });
+      } else {
+        showToast('Günlük notun kaydedildi.');
+      }
     } finally {
       setSaving(false);
     }
