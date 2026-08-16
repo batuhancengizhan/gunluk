@@ -5,10 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const REMINDER_ENABLED_KEY = '@gunluk_asistan/reminder_enabled';
 const REMINDER_HOUR_KEY = '@gunluk_asistan/reminder_hour';
 const REMINDER_MINUTE_KEY = '@gunluk_asistan/reminder_minute';
-const REMINDER_NOTIFICATION_ID = 'daily-journal-reminder';
+const LEGACY_REMINDER_NOTIFICATION_ID = 'daily-journal-reminder';
 
-// Her gün farklı bir mesaj gelmesi için basit bir döngü — hatırlatıcı ve
-// nazik bir tavsiye/motivasyon karışımı.
+// Her gün farklı bir mesaj gelmesi için haftanın 7 gününe (Pazar..Cumartesi)
+// birebir eşlenen 7 mesaj — her biri kendi haftalık tetikleyicisiyle
+// zamanlanır, böylece mesaj gerçekten her gün değişir (bkz. enableDailyReminder).
 const REMINDER_MESSAGES = [
   'Bugün nasıl geçti? Birkaç cümleyle günlüğüne not düşmeye ne dersin? 📝',
   'Küçük bir mola ver ve bugünün hislerini günlüğüne yaz. 🌿',
@@ -18,6 +19,8 @@ const REMINDER_MESSAGES = [
   'Duygularını yazıya dökmek, onları anlamanın ilk adımıdır. 😊',
   'Haftalık özet için düzenli not almak faydalı — bugünü de ekle! ✨',
 ];
+
+const REMINDER_NOTIFICATION_IDS = REMINDER_MESSAGES.map((_, i) => `journal-reminder-${i}`);
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -70,23 +73,26 @@ export async function enableDailyReminder(hour: number, minute: number): Promise
   if (!granted) return false;
 
   await ensureAndroidChannel();
-  await Notifications.cancelScheduledNotificationAsync(REMINDER_NOTIFICATION_ID).catch(() => {});
+  await cancelAllReminderNotifications();
 
-  const message = REMINDER_MESSAGES[Math.floor(Math.random() * REMINDER_MESSAGES.length)];
-
-  await Notifications.scheduleNotificationAsync({
-    identifier: REMINDER_NOTIFICATION_ID,
-    content: {
-      title: 'Günlük Asistan',
-      body: message,
-      sound: true,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour,
-      minute,
-    },
-  });
+  await Promise.all(
+    REMINDER_MESSAGES.map((message, i) =>
+      Notifications.scheduleNotificationAsync({
+        identifier: REMINDER_NOTIFICATION_IDS[i],
+        content: {
+          title: 'Günlük Asistan',
+          body: message,
+          sound: true,
+        },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+          weekday: i + 1, // 1=Pazar .. 7=Cumartesi
+          hour,
+          minute,
+        },
+      })
+    )
+  );
 
   await AsyncStorage.setItem(REMINDER_ENABLED_KEY, 'true');
   await AsyncStorage.setItem(REMINDER_HOUR_KEY, String(hour));
@@ -94,7 +100,16 @@ export async function enableDailyReminder(hour: number, minute: number): Promise
   return true;
 }
 
+async function cancelAllReminderNotifications(): Promise<void> {
+  await Promise.all([
+    ...REMINDER_NOTIFICATION_IDS.map((id) =>
+      Notifications.cancelScheduledNotificationAsync(id).catch(() => {})
+    ),
+    Notifications.cancelScheduledNotificationAsync(LEGACY_REMINDER_NOTIFICATION_ID).catch(() => {}),
+  ]);
+}
+
 export async function disableDailyReminder(): Promise<void> {
-  await Notifications.cancelScheduledNotificationAsync(REMINDER_NOTIFICATION_ID).catch(() => {});
+  await cancelAllReminderNotifications();
   await AsyncStorage.setItem(REMINDER_ENABLED_KEY, 'false');
 }
