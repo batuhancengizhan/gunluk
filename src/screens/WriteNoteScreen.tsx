@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { addNote, getNotes } from '../storage/notesStorage';
 import BackgroundArt, { hasBackgroundArt } from '../components/BackgroundArt';
+import BreathingExercise from '../components/BreathingExercise';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -24,6 +25,8 @@ import { haptics } from '../utils/haptics';
 import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 import { MOODS, moodLabel } from '../constants/moods';
 
+const STRESS_MOODS = ['😰', '😡', '😢', '😴'];
+
 export default function WriteNoteScreen() {
   const { colors } = useTheme();
   const { backgroundTheme } = useBackgroundTheme();
@@ -34,6 +37,8 @@ export default function WriteNoteScreen() {
   const [saving, setSaving] = useState(false);
   const [streak, setStreak] = useState(0);
   const [prompts, setPrompts] = useState<string[]>([]);
+  const [showBreathingSuggestion, setShowBreathingSuggestion] = useState(false);
+  const [breathingVisible, setBreathingVisible] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   useFocusEffect(
@@ -56,7 +61,11 @@ export default function WriteNoteScreen() {
 
   const handleMoodPress = (emoji: string) => {
     haptics.selection();
-    setMood((prev) => (prev === emoji ? undefined : emoji));
+    setMood((prev) => {
+      const next = prev === emoji ? undefined : emoji;
+      setShowBreathingSuggestion(!!next && STRESS_MOODS.includes(next));
+      return next;
+    });
   };
 
   const handleSave = async () => {
@@ -73,6 +82,7 @@ export default function WriteNoteScreen() {
       await addNote(trimmed, mood);
       setText('');
       setMood(undefined);
+      setShowBreathingSuggestion(false);
       const notes = await getNotes();
       const newStreak = calculateStreak(notes);
       setStreak(newStreak);
@@ -129,6 +139,35 @@ export default function WriteNoteScreen() {
           ))}
         </View>
 
+        {showBreathingSuggestion && (
+          <View style={styles.breathingSuggestion}>
+            <View style={styles.breathingSuggestionText}>
+              <Text style={styles.breathingSuggestionTitle}>Kısa bir nefes molası ister misin?</Text>
+              <Text style={styles.breathingSuggestionSubtitle}>1 dakikalık kutu nefesi zihnini sakinleştirebilir.</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.breathingSuggestionButton}
+              onPress={() => {
+                haptics.selection();
+                setBreathingVisible(true);
+              }}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Nefes egzersizini başlat"
+            >
+              <Text style={styles.breathingSuggestionButtonText}>Başla</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowBreathingSuggestion(false)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="Öneriyi kapat"
+            >
+              <Text style={styles.breathingSuggestionDismiss}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {text.length === 0 && prompts.length > 0 && (
           <ScrollView
             horizontal
@@ -171,6 +210,7 @@ export default function WriteNoteScreen() {
           <Text style={styles.buttonText}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
+      <BreathingExercise visible={breathingVisible} onClose={() => setBreathingVisible(false)} />
     </View>
   );
 }
@@ -236,6 +276,48 @@ function getStyles(colors: ThemeColors) {
     },
     moodEmoji: {
       fontSize: 21,
+    },
+    breathingSuggestion: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      padding: 12,
+      marginBottom: 14,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      ...softShadow(colors),
+    },
+    breathingSuggestionText: {
+      flex: 1,
+    },
+    breathingSuggestionTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    breathingSuggestionSubtitle: {
+      fontSize: 11.5,
+      color: colors.subtext,
+      lineHeight: 15,
+    },
+    breathingSuggestionButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+    },
+    breathingSuggestionButtonText: {
+      color: colors.primaryText,
+      fontSize: 12.5,
+      fontWeight: '700',
+    },
+    breathingSuggestionDismiss: {
+      fontSize: 15,
+      color: colors.subtext,
+      padding: 4,
     },
     promptScroll: {
       marginBottom: 12,
