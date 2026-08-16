@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Share,
   StyleSheet,
   Text,
@@ -55,7 +57,10 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
 
   return (
     <Modal visible={!!note} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <View style={[styles.sheet, { paddingBottom: 22 + insets.bottom }]}>
           <View style={styles.grabber} />
           <View style={styles.titleRow}>
@@ -87,7 +92,7 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
