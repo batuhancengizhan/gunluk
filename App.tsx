@@ -14,6 +14,7 @@ import {
   Fraunces_700Bold,
   Fraunces_800ExtraBold,
 } from '@expo-google-fonts/fraunces';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import WriteNoteScreen from './src/screens/WriteNoteScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
@@ -122,12 +123,14 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <BackgroundThemeProvider>
-        <AppLockProvider>
-          <AppContent />
-        </AppLockProvider>
-      </BackgroundThemeProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <BackgroundThemeProvider>
+          <AppLockProvider>
+            <AppContent />
+          </AppLockProvider>
+        </BackgroundThemeProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

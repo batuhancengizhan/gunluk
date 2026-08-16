@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useAppLock } from '../context/AppLockContext';
@@ -10,6 +11,7 @@ import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 export default function LockScreen() {
   const { colors } = useTheme();
   const { unlock, disableLock, lockoutUntil } = useAppLock();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
@@ -66,7 +68,12 @@ export default function LockScreen() {
     : 'Devam etmek için PIN kodunu gir';
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <View style={styles.iconWrap}>
         <Ionicons
           name={isLockedOut ? 'time-outline' : 'lock-closed'}

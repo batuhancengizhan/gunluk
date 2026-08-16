@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import PinPad from './PinPad';
 
@@ -11,6 +12,7 @@ interface Props {
 
 export default function PinSetupModal({ visible, onClose, onConfirm }: Props) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [step, setStep] = useState<'create' | 'confirm'>('create');
   const [firstPin, setFirstPin] = useState('');
@@ -62,7 +64,7 @@ export default function PinSetupModal({ visible, onClose, onConfirm }: Props) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 24 + insets.bottom }]}>
           <View style={styles.grabber} />
           <Text style={styles.title}>
             {step === 'create' ? 'Yeni PIN Oluştur' : 'PIN\'i Onayla'}

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { haptics } from '../utils/haptics';
 import { FONT_DISPLAY_EXTRABOLD } from '../constants/fonts';
@@ -42,6 +43,7 @@ export async function hasSeenOnboarding(): Promise<boolean> {
 
 export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [index, setIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
@@ -70,7 +72,10 @@ export default function OnboardingScreen({ onDone }: { onDone: () => void }) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.skip} onPress={finish}>
+      <TouchableOpacity
+        style={[styles.skip, { top: insets.top + 16 }]}
+        onPress={finish}
+      >
         <Text style={styles.skipText}>Atla</Text>
       </TouchableOpacity>
 

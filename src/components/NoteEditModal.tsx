@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Note } from '../types/Note';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow } from '../utils/shadow';
@@ -23,6 +24,7 @@ interface Props {
 
 export default function NoteEditModal({ note, onClose, onSave }: Props) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [text, setText] = useState('');
 
@@ -54,7 +56,7 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
   return (
     <Modal visible={!!note} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: 22 + insets.bottom }]}>
           <View style={styles.grabber} />
           <View style={styles.titleRow}>
             <Text style={styles.title}>Notu Düzenle</Text>
