@@ -28,6 +28,14 @@ export async function deleteNote(id: string): Promise<void> {
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify(filtered));
 }
 
+// "Geri al" akışı için: silinen bir notu, tüm alanlarını koruyarak
+// (id, tarih, favori durumu dahil) depoya geri ekler.
+export async function restoreNote(note: Note): Promise<void> {
+  const notes = await getNotes();
+  if (notes.some((n) => n.id === note.id)) return;
+  await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([note, ...notes]));
+}
+
 export async function updateNoteText(id: string, text: string): Promise<void> {
   const notes = await getNotes();
   const updated = notes.map((n) =>

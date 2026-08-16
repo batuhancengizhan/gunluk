@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  Alert,
   FlatList,
   RefreshControl,
   ScrollView,
@@ -13,12 +12,13 @@ import {
   View,
 } from 'react-native';
 import { Note } from '../types/Note';
-import { deleteNote, getNotes, toggleFavorite, updateNoteText } from '../storage/notesStorage';
+import { deleteNote, getNotes, restoreNote, toggleFavorite, updateNoteText } from '../storage/notesStorage';
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
 import MoodCalendar from '../components/MoodCalendar';
 import OnThisDayCard from '../components/OnThisDayCard';
 import NoteEditModal from '../components/NoteEditModal';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
+import { useToast } from '../context/ToastContext';
 import { cardShadow, softShadow } from '../utils/shadow';
 import { haptics } from '../utils/haptics';
 import { moodLabel } from '../constants/moods';
@@ -36,6 +36,7 @@ function formatDate(iso: string) {
 
 export default function HistoryScreen() {
   const { colors } = useTheme();
+  const { showToast } = useToast();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,20 +87,23 @@ export default function HistoryScreen() {
     return sortAscending ? [...filtered].reverse() : filtered;
   }, [notes, query, favoritesOnly, moodFilter, sortAscending]);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (note: Note) => {
     haptics.medium();
-    Alert.alert('Notu sil', 'Bu notu silmek istediğine emin misin?', [
-      { text: 'Vazgeç', style: 'cancel' },
-      {
-        text: 'Sil',
-        style: 'destructive',
+    setNotes((prev) => prev.filter((n) => n.id !== note.id));
+    await deleteNote(note.id);
+    haptics.warning();
+
+    showToast('Not silindi.', {
+      duration: 4000,
+      action: {
+        label: 'Geri Al',
         onPress: async () => {
-          await deleteNote(id);
-          haptics.warning();
+          await restoreNote(note);
+          haptics.selection();
           loadNotes();
         },
       },
-    ]);
+    });
   };
 
   const handleToggleFavorite = async (id: string) => {
@@ -238,7 +242,7 @@ export default function HistoryScreen() {
           <TouchableOpacity
             style={styles.card}
             onPress={() => setEditingNote(item)}
-            onLongPress={() => handleDelete(item.id)}
+            onLongPress={() => handleDelete(item)}
             accessibilityRole="button"
             accessibilityLabel={`${formatDate(item.createdAt)} tarihli not: ${item.text}`}
             accessibilityHint="Düzenlemek için dokun, silmek için uzun bas"

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { Animated, StyleSheet, Text } from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -7,7 +7,7 @@ import { useToast } from '../context/ToastContext';
 export default function Toast() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { message, visible } = useToast();
+  const { message, visible, action, hideToast } = useToast();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const translateY = useRef(new Animated.Value(-80)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -33,13 +33,26 @@ export default function Toast() {
 
   return (
     <Animated.View
-      pointerEvents="none"
+      pointerEvents={visible ? 'box-none' : 'none'}
       style={[
         styles.container,
         { top: insets.top + 8, transform: [{ translateY }], opacity },
       ]}
     >
       <Text style={styles.text}>{message}</Text>
+      {action && (
+        <TouchableOpacity
+          onPress={() => {
+            action.onPress();
+            hideToast();
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          accessibilityRole="button"
+          accessibilityLabel={action.label}
+        >
+          <Text style={styles.actionText}>{action.label}</Text>
+        </TouchableOpacity>
+      )}
     </Animated.View>
   );
 }
@@ -50,6 +63,10 @@ function getStyles(colors: ThemeColors) {
       position: 'absolute',
       left: 20,
       right: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 14,
       backgroundColor: colors.text,
       borderRadius: 14,
       paddingVertical: 13,
@@ -62,10 +79,15 @@ function getStyles(colors: ThemeColors) {
       elevation: 8,
     },
     text: {
+      flex: 1,
       color: colors.background,
       fontSize: 14,
       fontWeight: '600',
-      textAlign: 'center',
+    },
+    actionText: {
+      color: colors.primary,
+      fontSize: 14,
+      fontWeight: '700',
     },
   });
 }
