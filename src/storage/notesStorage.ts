@@ -55,3 +55,31 @@ export async function toggleFavorite(id: string): Promise<void> {
 export async function clearAllNotes(): Promise<void> {
   await AsyncStorage.removeItem(NOTES_KEY);
 }
+
+function isValidNote(value: unknown): value is Note {
+  if (!value || typeof value !== 'object') return false;
+  const n = value as Record<string, unknown>;
+  return (
+    typeof n.id === 'string' &&
+    typeof n.text === 'string' &&
+    typeof n.createdAt === 'string' &&
+    !Number.isNaN(new Date(n.createdAt).getTime())
+  );
+}
+
+// Bir JSON yedeğinden gelen notları mevcut notlarla birleştirir. Aynı id'ye
+// sahip notlar atlanır (cihazdaki mevcut sürüm korunur, üzerine yazılmaz).
+export async function mergeNotesFromBackup(
+  backupNotes: unknown[]
+): Promise<{ added: number; skipped: number }> {
+  const notes = await getNotes();
+  const existingIds = new Set(notes.map((n) => n.id));
+  const validNotes = backupNotes.filter(isValidNote);
+
+  const toAdd = validNotes.filter((n) => !existingIds.has(n.id));
+  if (toAdd.length > 0) {
+    await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([...notes, ...toAdd]));
+  }
+
+  return { added: toAdd.length, skipped: validNotes.length - toAdd.length };
+}

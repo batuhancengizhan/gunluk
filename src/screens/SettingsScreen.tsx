@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { clearAllNotes, getNotes } from '../storage/notesStorage';
+import { clearAllNotes, getNotes, mergeNotesFromBackup } from '../storage/notesStorage';
 import { formatNotesForExport } from '../utils/exportNotes';
+import { pickNotesBackup, shareNotesBackup } from '../utils/backup';
 import { Note } from '../types/Note';
 import { ThemeColors, ThemeMode, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
@@ -49,6 +50,8 @@ export default function SettingsScreen() {
   const [pinSetupVisible, setPinSetupVisible] = useState(false);
   const [notes, setNotes] = useState<Note[]>([]);
   const [tipsRefreshing, setTipsRefreshing] = useState(false);
+  const [backupWorking, setBackupWorking] = useState(false);
+  const [restoreWorking, setRestoreWorking] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -135,6 +138,44 @@ export default function SettingsScreen() {
       await Share.share({ message: formatNotesForExport(notes) });
     } catch {
       showToast('Notlar dışa aktarılamadı.');
+    }
+  };
+
+  const handleBackup = async () => {
+    const currentNotes = await getNotes();
+    if (currentNotes.length === 0) {
+      showToast('Yedeklenecek henüz bir notun yok.');
+      return;
+    }
+    setBackupWorking(true);
+    try {
+      await shareNotesBackup(currentNotes);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Yedek dosyası oluşturulamadı.');
+    } finally {
+      setBackupWorking(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setRestoreWorking(true);
+    try {
+      const backupNotes = await pickNotesBackup();
+      if (!backupNotes) return;
+      const { added, skipped } = await mergeNotesFromBackup(backupNotes);
+      const refreshed = await getNotes();
+      setNotes(refreshed);
+      if (added === 0) {
+        showToast('Yeni not bulunamadı, yedekteki tüm notlar zaten cihazında.');
+      } else {
+        showToast(
+          `${added} not geri yüklendi${skipped > 0 ? ` (${skipped} tanesi zaten vardı)` : ''}.`
+        );
+      }
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Yedek dosyası okunamadı.');
+    } finally {
+      setRestoreWorking(false);
     }
   };
 
@@ -324,15 +365,43 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Veri</Text>
+        {Platform.OS !== 'web' && (
+          <>
+            <TouchableOpacity
+              style={styles.exportButton}
+              onPress={handleBackup}
+              disabled={backupWorking}
+              activeOpacity={0.85}
+            >
+              {backupWorking ? (
+                <ActivityIndicator size="small" color={colors.text} />
+              ) : (
+                <Text style={styles.exportButtonText}>Yedek Dosyası Oluştur</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.exportButton, styles.dataButtonSpacing]}
+              onPress={handleRestore}
+              disabled={restoreWorking}
+              activeOpacity={0.85}
+            >
+              {restoreWorking ? (
+                <ActivityIndicator size="small" color={colors.text} />
+              ) : (
+                <Text style={styles.exportButtonText}>Yedekten Geri Yükle</Text>
+              )}
+            </TouchableOpacity>
+          </>
+        )}
         <TouchableOpacity
-          style={styles.exportButton}
+          style={[styles.exportButton, Platform.OS !== 'web' && styles.dataButtonSpacing]}
           onPress={handleExport}
           activeOpacity={0.85}
         >
-          <Text style={styles.exportButtonText}>Notları Dışa Aktar</Text>
+          <Text style={styles.exportButtonText}>Notları Metin Olarak Paylaş</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.dangerButton, styles.dangerButtonSpacing]}
+          style={[styles.dangerButton, styles.dataButtonSpacing]}
           onPress={handleClearAll}
           activeOpacity={0.85}
         >
@@ -525,7 +594,7 @@ function getStyles(colors: ThemeColors) {
       fontSize: 15,
       fontWeight: '700',
     },
-    dangerButtonSpacing: {
+    dataButtonSpacing: {
       marginTop: 10,
     },
     dangerButton: {
