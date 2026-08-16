@@ -15,7 +15,7 @@ function toDayKey(iso: string): string {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-function calculateLongestStreak(notes: Note[]): number {
+export function calculateLongestStreak(notes: Note[]): number {
   if (notes.length === 0) return 0;
 
   const uniqueDays = Array.from(
@@ -36,6 +36,24 @@ function calculateLongestStreak(notes: Note[]): number {
   }
 
   return longest;
+}
+
+const NOTE_COUNT_MILESTONE_MESSAGES: Record<number, string> = {
+  1: 'İlk günlük notunu yazdın! Bu güzel bir başlangıç ✨',
+  10: '10 not! Küçük adımlar büyük alışkanlıklar yaratır 📖',
+  25: '25 not birikti — düşüncelerin güvenli bir arşivde 🗂️',
+  50: '50 notluk bir günlük! Kendini daha iyi tanıyorsun 🌟',
+  100: '100 not! Bu gerçek bir günlük arşivi oldu 📚',
+  250: '250 not — bu kayda değer bir emek 💪',
+  500: '500 not! Nadir bulunan bir sadakat 🏅',
+  1000: '1000 not! Bu inanılmaz bir miras 👑',
+};
+
+// Toplam not sayısı tam olarak bir kilometre taşına ulaştığında kutlama
+// mesajı döner (seri kırılsa bile — bu, tutarlılıktan bağımsız bir
+// "toplam emek" kutlaması).
+export function getNoteCountMilestoneMessage(totalNotes: number): string | null {
+  return NOTE_COUNT_MILESTONE_MESSAGES[totalNotes] ?? null;
 }
 
 export function computeStats(notes: Note[]): JournalStats {

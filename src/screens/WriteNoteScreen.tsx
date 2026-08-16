@@ -16,6 +16,7 @@ import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { useToast } from '../context/ToastContext';
 import { calculateStreak, getStreakMilestoneMessage } from '../utils/streak';
+import { calculateLongestStreak, getNoteCountMilestoneMessage } from '../utils/stats';
 import { cardShadow, softShadow } from '../utils/shadow';
 import { getRandomPrompts } from '../constants/writingPrompts';
 import { haptics } from '../utils/haptics';
@@ -66,6 +67,8 @@ export default function WriteNoteScreen() {
     }
     setSaving(true);
     try {
+      const previousLongestStreak = calculateLongestStreak(await getNotes());
+
       await addNote(trimmed, mood);
       setText('');
       setMood(undefined);
@@ -74,7 +77,10 @@ export default function WriteNoteScreen() {
       setStreak(newStreak);
       haptics.success();
 
-      const milestoneMessage = getStreakMilestoneMessage(newStreak);
+      const isNewRecord = newStreak > previousLongestStreak && newStreak > 1;
+      const milestoneMessage = isNewRecord
+        ? `Yeni rekorun! ${newStreak} gün üst üste yazdın 🏅`
+        : getStreakMilestoneMessage(newStreak) ?? getNoteCountMilestoneMessage(notes.length);
       if (milestoneMessage) {
         showToast(milestoneMessage, { duration: 3600 });
       } else {
