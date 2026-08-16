@@ -2,7 +2,6 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,6 +14,7 @@ import {
 import { addNote, getNotes } from '../storage/notesStorage';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
+import { useToast } from '../context/ToastContext';
 import { calculateStreak } from '../utils/streak';
 import { cardShadow, softShadow } from '../utils/shadow';
 import { getRandomPrompts } from '../constants/writingPrompts';
@@ -25,6 +25,7 @@ import { MOODS, moodLabel } from '../constants/moods';
 export default function WriteNoteScreen() {
   const { colors } = useTheme();
   const { backgroundTheme } = useBackgroundTheme();
+  const { showToast } = useToast();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [text, setText] = useState('');
   const [mood, setMood] = useState<string | undefined>(undefined);
@@ -60,7 +61,7 @@ export default function WriteNoteScreen() {
     const trimmed = text.trim();
     if (!trimmed) {
       haptics.warning();
-      Alert.alert('Boş not', 'Kaydetmeden önce bir şeyler yazmalısın.');
+      showToast('Kaydetmeden önce bir şeyler yazmalısın.');
       return;
     }
     setSaving(true);
@@ -71,7 +72,7 @@ export default function WriteNoteScreen() {
       const notes = await getNotes();
       setStreak(calculateStreak(notes));
       haptics.success();
-      Alert.alert('Kaydedildi', 'Günlük notun kaydedildi.');
+      showToast('Günlük notun kaydedildi.');
     } finally {
       setSaving(false);
     }

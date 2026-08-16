@@ -15,6 +15,7 @@ import {
   getReminderSettings,
 } from '../services/notificationService';
 import { useAppLock } from '../context/AppLockContext';
+import { useToast } from '../context/ToastContext';
 import { FONT_DISPLAY_EXTRABOLD } from '../constants/fonts';
 import PinSetupModal from '../components/PinSetupModal';
 import StatsGrid from '../components/StatsGrid';
@@ -36,6 +37,7 @@ export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const { backgroundThemeId, setBackgroundThemeId } = useBackgroundTheme();
   const { lockEnabled, setPin, disableLock } = useAppLock();
+  const { showToast } = useToast();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
   const [reminderEnabled, setReminderEnabled] = useState(false);
@@ -97,19 +99,19 @@ export default function SettingsScreen() {
   const handlePinConfirm = async (pin: string) => {
     await setPin(pin);
     setPinSetupVisible(false);
-    Alert.alert('Kilit Etkin', 'Uygulama artık bir PIN ile korunuyor.');
+    showToast('Uygulama artık bir PIN ile korunuyor.');
   };
 
   const handleExport = async () => {
     const notes = await getNotes();
     if (notes.length === 0) {
-      Alert.alert('Not yok', 'Dışa aktarılacak henüz bir notun yok.');
+      showToast('Dışa aktarılacak henüz bir notun yok.');
       return;
     }
     try {
       await Share.share({ message: formatNotesForExport(notes) });
     } catch {
-      Alert.alert('Hata', 'Notlar dışa aktarılamadı.');
+      showToast('Notlar dışa aktarılamadı.');
     }
   };
 
@@ -124,7 +126,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             await clearAllNotes();
-            Alert.alert('Tamamlandı', 'Tüm notlar silindi.');
+            showToast('Tüm notlar silindi.');
           },
         },
       ]

@@ -21,7 +21,9 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { BackgroundThemeProvider } from './src/context/BackgroundThemeContext';
 import { AppLockProvider, useAppLock } from './src/context/AppLockContext';
+import { ToastProvider } from './src/context/ToastContext';
 import LockScreen from './src/components/LockScreen';
+import Toast from './src/components/Toast';
 import OnboardingScreen, { hasSeenOnboarding } from './src/components/OnboardingScreen';
 import { FONT_DISPLAY_BOLD } from './src/constants/fonts';
 
@@ -93,6 +95,7 @@ function AppContent() {
           options={{ title: 'Ayarlar' }}
         />
       </Tab.Navigator>
+      <Toast />
       {isLocked && <LockScreen />}
       {onboardingChecked && showOnboarding && (
         <OnboardingScreen onDone={() => setShowOnboarding(false)} />
@@ -127,7 +130,9 @@ export default function App() {
       <ThemeProvider>
         <BackgroundThemeProvider>
           <AppLockProvider>
-            <AppContent />
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
           </AppLockProvider>
         </BackgroundThemeProvider>
       </ThemeProvider>
