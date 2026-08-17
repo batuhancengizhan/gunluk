@@ -7,8 +7,3 @@ export const WRITING_PROMPTS: string[] = [
   'Şu an aklında dönüp duran bir düşünce var mı?',
   'Bugün kimin için minnettarsın?',
 ];
-
-export function getRandomPrompts(count: number): string[] {
-  const shuffled = [...WRITING_PROMPTS].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
-}

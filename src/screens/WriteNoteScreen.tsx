@@ -20,7 +20,12 @@ import { useToast } from '../context/ToastContext';
 import { calculateStreak, getStreakMilestoneMessage } from '../utils/streak';
 import { calculateLongestStreak, getNoteCountMilestoneMessage } from '../utils/stats';
 import { cardShadow, softShadow } from '../utils/shadow';
-import { getRandomPrompts } from '../constants/writingPrompts';
+import {
+  getCachedPrompts,
+  pickRandomPrompts,
+  refreshPersonalizedPrompts,
+  shouldRefreshPrompts,
+} from '../services/promptsService';
 import { haptics } from '../utils/haptics';
 import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 import { MOODS, moodLabel } from '../constants/moods';
@@ -43,8 +48,16 @@ export default function WriteNoteScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      getNotes().then((notes) => setStreak(calculateStreak(notes)));
-      setPrompts(getRandomPrompts(3));
+      getNotes().then(async (notes) => {
+        setStreak(calculateStreak(notes));
+        const cached = await getCachedPrompts();
+        setPrompts(pickRandomPrompts(cached, 3));
+        if (await shouldRefreshPrompts()) {
+          refreshPersonalizedPrompts(notes)
+            .then((fresh) => setPrompts(pickRandomPrompts(fresh, 3)))
+            .catch(() => {});
+        }
+      });
     }, [])
   );
 

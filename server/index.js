@@ -55,6 +55,31 @@ const FALLBACK_TIPS = [
   'Kısa bir yürüyüş zihnini tazeleyebilir. 🚶',
 ];
 
+const PROMPTS_SYSTEM_PROMPT = `Sen "Günlük Asistan" uygulamasının yazma istemi asistanısın.
+Kullanıcının son günlük notlarını ve ruh hali emojilerini (varsa) okuyup, ona bugün günlüğüne
+yazması için ilham verecek açık uçlu, düşündürücü Türkçe yazma istemleri üretiyorsun.
+Kurallar:
+- Tam olarak 6 istem üret.
+- Her istem bir soru cümlesi olsun, en fazla 90 karakter, tek başına bir sohbet açılışı gibi dursun.
+- İstemlerin bir kısmı kullanıcının yakın zamandaki temalarına/ruh haline hafifçe değinebilir
+  (örn. yorgunluk/kaygı öne çıkıyorsa buna nazikçe dokunan bir soru; olumlu bir eğilim varsa
+  bunu keşfettiren bir soru), ama hiçbir kişisel/hassas detayı (isim, yer, olay) tekrar etme.
+- İstemlerin bir kısmı da herkese uygun, genel düşündürücü sorular olsun (minnettarlık,
+  günün küçük anları, gelecek, ilişkiler, öğrenilen şeyler gibi).
+- Klişe ve tekrar eden kalıplardan kaçın, çeşitlilik olsun.
+- Asla tıbbi teşhis koyma veya tedavi önerisi verme.
+Yanıtını SADECE şu JSON formatında ver, başka hiçbir açıklama veya markdown ekleme:
+{"prompts": ["...", "...", "...", "...", "...", "..."]}`;
+
+const FALLBACK_PROMPTS = [
+  'Bugün seni gülümseten bir şey oldu mu?',
+  'Bugün için minnettar olduğun üç şey ne?',
+  'Bugün seni en çok ne yordu?',
+  'Yarın kendine söylemek istediğin bir şey var mı?',
+  'Bugün öğrendiğin küçük bir şey var mı?',
+  'Şu an aklında dönüp duran bir düşünce var mı?',
+];
+
 app.use(cors());
 app.use(express.json({ limit: '1mb' }));
 
@@ -133,16 +158,16 @@ app.post('/analyze', analyzeLimiter, async (req, res) => {
   }
 });
 
-function parseTipsFromText(text) {
+function parseListFromText(text, key) {
   const match = text.match(/\{[\s\S]*\}/);
   if (!match) return null;
   try {
     const parsed = JSON.parse(match[0]);
-    if (!Array.isArray(parsed.tips)) return null;
-    const tips = parsed.tips
-      .filter((tip) => typeof tip === 'string' && tip.trim().length > 0)
-      .map((tip) => tip.trim().slice(0, 120));
-    return tips.length > 0 ? tips : null;
+    if (!Array.isArray(parsed[key])) return null;
+    const items = parsed[key]
+      .filter((item) => typeof item === 'string' && item.trim().length > 0)
+      .map((item) => item.trim().slice(0, 120));
+    return items.length > 0 ? items : null;
   } catch {
     return null;
   }
@@ -189,8 +214,63 @@ app.post('/tips', analyzeLimiter, async (req, res) => {
     }
 
     const textBlock = response.content.find((block) => block.type === 'text');
-    const tips = textBlock?.text ? parseTipsFromText(textBlock.text) : null;
+    const tips = textBlock?.text ? parseListFromText(textBlock.text, 'tips') : null;
     return res.json({ tips: tips ?? FALLBACK_TIPS });
+  } catch (error) {
+    if (error instanceof Anthropic.RateLimitError) {
+      return res.status(429).json({ error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar dene.' });
+    }
+    if (error instanceof Anthropic.APIError) {
+      return res.status(502).json({ error: `Yapay zeka servisinde hata: ${error.message}` });
+    }
+    console.error(error);
+    return res.status(500).json({ error: 'Beklenmeyen bir hata oluştu.' });
+  }
+});
+
+app.post('/prompts', analyzeLimiter, async (req, res) => {
+  const { notes } = req.body ?? {};
+
+  if (!Array.isArray(notes)) {
+    return res.status(400).json({ error: 'notes alanı bir dizi olmalı.' });
+  }
+
+  if (notes.length > 60) {
+    return res.status(400).json({ error: 'Tek seferde en fazla 60 not gönderilebilir.' });
+  }
+
+  if (notes.length === 0) {
+    return res.json({ prompts: FALLBACK_PROMPTS });
+  }
+
+  const notesText = notes
+    .map((note, index) => {
+      const date = note?.createdAt ? new Date(note.createdAt).toLocaleDateString('tr-TR') : `Not ${index + 1}`;
+      const moodTag = note?.mood ? ` (ruh hali: ${note.mood})` : '';
+      return `[${date}]${moodTag} ${note?.text ?? ''}`;
+    })
+    .join('\n\n');
+
+  try {
+    const response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 512,
+      system: PROMPTS_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: `Aşağıdaki son günlük notlarına göre 6 yazma istemi üret:\n\n${notesText}`,
+        },
+      ],
+    });
+
+    if (response.stop_reason === 'refusal') {
+      return res.json({ prompts: FALLBACK_PROMPTS });
+    }
+
+    const textBlock = response.content.find((block) => block.type === 'text');
+    const prompts = textBlock?.text ? parseListFromText(textBlock.text, 'prompts') : null;
+    return res.json({ prompts: prompts ?? FALLBACK_PROMPTS });
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) {
       return res.status(429).json({ error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar dene.' });
