@@ -43,12 +43,15 @@ export async function shareNotesBackup(notes: Note[]): Promise<void> {
 }
 
 // Kullanıcıya bir JSON yedek dosyası seçtirir ve içindeki notları döner.
-// İptal edilirse null döner.
+// İptal edilirse (veya seçim başarısız olursa) null döner.
 export async function pickNotesBackup(): Promise<Note[] | null> {
-  const picked = await File.pickFileAsync({ mimeTypes: 'application/json' });
-  if (picked.canceled) return null;
+  const picked = await File.pickFileAsync(undefined, 'application/json').catch(() => null);
+  if (!picked) return null;
 
-  const raw = await picked.result.text();
+  const file = Array.isArray(picked) ? picked[0] : picked;
+  if (!file) return null;
+
+  const raw = await file.text();
   const parsed = JSON.parse(raw);
   const notes = Array.isArray(parsed) ? parsed : parsed?.notes;
 
