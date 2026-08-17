@@ -6,4 +6,5 @@ export interface Note {
   isFavorite?: boolean;
   mood?: string;
   photoUri?: string;
+  revealAt?: string;
 }

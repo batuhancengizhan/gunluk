@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import * as Speech from 'expo-speech';
 import { Note } from '../types/Note';
 import { Summary } from '../types/Summary';
 import { getWeeklySummary } from '../services/analysisService';
@@ -9,6 +10,7 @@ import { getSummaries, saveSummary } from '../storage/summaryStorage';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow } from '../utils/shadow';
 import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
+import { haptics } from '../utils/haptics';
 
 function getLastWeekNotes(notes: Note[]): Note[] {
   const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -33,8 +35,32 @@ export default function WeeklySummaryCard({ notes }: { notes: Note[] }) {
   const [error, setError] = useState<string | null>(null);
   const [pastSummaries, setPastSummaries] = useState<Summary[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const weekNotes = getLastWeekNotes(notes);
+
+  useEffect(() => {
+    return () => {
+      Speech.stop();
+    };
+  }, []);
+
+  const handleToggleSpeak = () => {
+    if (!summary) return;
+    if (isSpeaking) {
+      Speech.stop();
+      setIsSpeaking(false);
+      return;
+    }
+    haptics.selection();
+    setIsSpeaking(true);
+    Speech.speak(summary, {
+      language: 'tr-TR',
+      onDone: () => setIsSpeaking(false),
+      onStopped: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    });
+  };
 
   const loadPastSummaries = useCallback(async () => {
     const data = await getSummaries();
@@ -82,7 +108,27 @@ export default function WeeklySummaryCard({ notes }: { notes: Note[] }) {
             Son 7 gündeki {weekNotes.length} not baz alınarak özet çıkarılır.
           </Text>
 
-          {summary && <Text style={styles.summaryText}>{summary}</Text>}
+          {summary && (
+            <>
+              <Text style={styles.summaryText}>{summary}</Text>
+              <TouchableOpacity
+                style={styles.listenButton}
+                onPress={handleToggleSpeak}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={isSpeaking ? 'Sesli okumayı durdur' : 'Özeti sesli dinle'}
+              >
+                <Ionicons
+                  name={isSpeaking ? 'stop-circle-outline' : 'volume-medium-outline'}
+                  size={15}
+                  color={colors.primary}
+                />
+                <Text style={styles.listenButtonText}>
+                  {isSpeaking ? 'Durdur' : 'Dinle'}
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
           {error && <Text style={styles.errorText}>{error}</Text>}
 
           <TouchableOpacity
@@ -184,7 +230,20 @@ function getStyles(colors: ThemeColors) {
       fontSize: 14.5,
       color: colors.text,
       lineHeight: 21,
+      marginBottom: 10,
+    },
+    listenButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      alignSelf: 'flex-start',
       marginBottom: 14,
+      paddingVertical: 4,
+    },
+    listenButtonText: {
+      fontSize: 12.5,
+      fontWeight: '600',
+      color: colors.primary,
     },
     errorText: {
       fontSize: 13,

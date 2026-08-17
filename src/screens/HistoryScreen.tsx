@@ -15,6 +15,7 @@ import {
 import { Note } from '../types/Note';
 import { deleteNote, getNotes, restoreNote, toggleFavorite, updateNote } from '../storage/notesStorage';
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
+import PatternInsightsCard from '../components/PatternInsightsCard';
 import MoodCalendar from '../components/MoodCalendar';
 import OnThisDayCard from '../components/OnThisDayCard';
 import NoteEditModal from '../components/NoteEditModal';
@@ -23,6 +24,12 @@ import { useToast } from '../context/ToastContext';
 import { cardShadow, softShadow } from '../utils/shadow';
 import { haptics } from '../utils/haptics';
 import { moodLabel } from '../constants/moods';
+import {
+  cancelTimeCapsuleNotification,
+  formatRevealDate,
+  isRevealPending,
+  scheduleTimeCapsuleNotification,
+} from '../utils/timeCapsule';
 
 function formatDate(iso: string) {
   const date = new Date(iso);
@@ -92,6 +99,9 @@ export default function HistoryScreen() {
     haptics.medium();
     setNotes((prev) => prev.filter((n) => n.id !== note.id));
     await deleteNote(note.id);
+    if (isRevealPending(note.revealAt)) {
+      await cancelTimeCapsuleNotification(note.id);
+    }
     haptics.warning();
 
     showToast('Not silindi.', {
@@ -100,6 +110,9 @@ export default function HistoryScreen() {
         label: 'Geri Al',
         onPress: async () => {
           await restoreNote(note);
+          if (isRevealPending(note.revealAt)) {
+            await scheduleTimeCapsuleNotification(note);
+          }
           haptics.selection();
           loadNotes();
         },
@@ -161,6 +174,7 @@ export default function HistoryScreen() {
           <>
             <OnThisDayCard notes={notes} onPress={setEditingNote} />
             <WeeklySummaryCard notes={notes} />
+            <PatternInsightsCard notes={notes} />
             <MoodCalendar notes={notes} onDayPress={setEditingNote} />
 
             <View style={styles.searchRow}>
@@ -271,6 +285,14 @@ export default function HistoryScreen() {
             <Text style={styles.noteText}>{item.text}</Text>
             {item.photoUri && (
               <Image source={{ uri: item.photoUri }} style={styles.cardPhoto} />
+            )}
+            {isRevealPending(item.revealAt) && (
+              <View style={styles.capsuleBadge}>
+                <Ionicons name="mail-outline" size={12} color={colors.primary} />
+                <Text style={styles.capsuleBadgeText}>
+                  {formatRevealDate(item.revealAt!)} tarihinde hatırlatılacak
+                </Text>
+              </View>
             )}
           </TouchableOpacity>
         )}
@@ -410,6 +432,17 @@ function getStyles(colors: ThemeColors) {
       borderRadius: 12,
       marginTop: 10,
       backgroundColor: colors.background,
+    },
+    capsuleBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      marginTop: 10,
+    },
+    capsuleBadgeText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.primary,
     },
     emptyContainer: {
       flex: 1,

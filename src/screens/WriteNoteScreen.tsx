@@ -27,6 +27,9 @@ import {
   refreshPersonalizedPrompts,
   shouldRefreshPrompts,
 } from '../services/promptsService';
+import { getTodaysGreeting, requestNotificationPermission } from '../services/notificationService';
+import { TIME_CAPSULE_OPTIONS, scheduleTimeCapsuleNotification } from '../utils/timeCapsule';
+import { Ionicons } from '@expo/vector-icons';
 import { haptics } from '../utils/haptics';
 import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 import { MOODS, moodLabel } from '../constants/moods';
@@ -44,12 +47,16 @@ export default function WriteNoteScreen() {
   const [saving, setSaving] = useState(false);
   const [streak, setStreak] = useState(0);
   const [prompts, setPrompts] = useState<string[]>([]);
+  const [greeting, setGreeting] = useState('');
   const [showBreathingSuggestion, setShowBreathingSuggestion] = useState(false);
   const [breathingVisible, setBreathingVisible] = useState(false);
+  const [capsuleOptionId, setCapsuleOptionId] = useState<string | null>(null);
+  const [showCapsuleOptions, setShowCapsuleOptions] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
   useFocusEffect(
     useCallback(() => {
+      getTodaysGreeting().then(setGreeting);
       getNotes().then(async (notes) => {
         setStreak(calculateStreak(notes));
         const cached = await getCachedPrompts();
@@ -94,10 +101,32 @@ export default function WriteNoteScreen() {
     try {
       const previousLongestStreak = calculateLongestStreak(await getNotes());
 
-      await addNote(trimmed, mood, photoUri ?? undefined);
+      let revealAt: string | undefined;
+      const capsuleOption = TIME_CAPSULE_OPTIONS.find((o) => o.id === capsuleOptionId);
+      if (capsuleOption) {
+        revealAt = capsuleOption.computeDate(new Date()).toISOString();
+      }
+
+      const createdNote = await addNote(trimmed, {
+        mood,
+        photoUri: photoUri ?? undefined,
+        revealAt,
+      });
+
+      let capsuleMessage: string | null = null;
+      if (revealAt) {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          await scheduleTimeCapsuleNotification(createdNote);
+          capsuleMessage = `Bu not ${capsuleOption?.label.toLowerCase()} karşına çıkacak 📮`;
+        }
+      }
+
       setText('');
       setMood(undefined);
       setPhotoUri(null);
+      setCapsuleOptionId(null);
+      setShowCapsuleOptions(false);
       setShowBreathingSuggestion(false);
       const notes = await getNotes();
       const newStreak = calculateStreak(notes);
@@ -108,8 +137,11 @@ export default function WriteNoteScreen() {
       const milestoneMessage = isNewRecord
         ? `Yeni rekorun! ${newStreak} gün üst üste yazdın 🏅`
         : getStreakMilestoneMessage(newStreak) ?? getNoteCountMilestoneMessage(notes.length);
+
       if (milestoneMessage) {
         showToast(milestoneMessage, { duration: 3600 });
+      } else if (capsuleMessage) {
+        showToast(capsuleMessage, { duration: 3200 });
       } else {
         showToast('Günlük notun kaydedildi.');
       }
@@ -139,6 +171,7 @@ export default function WriteNoteScreen() {
             </View>
           )}
         </View>
+        {greeting.length > 0 && <Text style={styles.greeting}>{greeting}</Text>}
 
         <View style={styles.moodRow}>
           {MOODS.map((emoji) => (
@@ -162,6 +195,53 @@ export default function WriteNoteScreen() {
             onError={(message) => showToast(message)}
           />
         </View>
+
+        <TouchableOpacity
+          style={styles.capsuleToggle}
+          onPress={() => {
+            haptics.selection();
+            if (capsuleOptionId) {
+              setCapsuleOptionId(null);
+              setShowCapsuleOptions(false);
+            } else {
+              setShowCapsuleOptions((prev) => !prev);
+            }
+          }}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel="Geleceğe mektup"
+          accessibilityState={{ selected: !!capsuleOptionId }}
+        >
+          <Ionicons
+            name={capsuleOptionId ? 'mail-open-outline' : 'mail-outline'}
+            size={14}
+            color={capsuleOptionId ? colors.primary : colors.subtext}
+          />
+          <Text style={[styles.capsuleToggleText, capsuleOptionId && styles.capsuleToggleTextActive]}>
+            {capsuleOptionId
+              ? `Geleceğe mektup: ${TIME_CAPSULE_OPTIONS.find((o) => o.id === capsuleOptionId)?.label}`
+              : 'Bunu gelecekte bana hatırlat'}
+          </Text>
+        </TouchableOpacity>
+
+        {showCapsuleOptions && !capsuleOptionId && (
+          <View style={styles.capsuleOptionsRow}>
+            {TIME_CAPSULE_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.id}
+                style={styles.capsuleOptionChip}
+                onPress={() => {
+                  haptics.selection();
+                  setCapsuleOptionId(option.id);
+                  setShowCapsuleOptions(false);
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.capsuleOptionChipText}>{option.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {showBreathingSuggestion && (
           <View style={styles.breathingSuggestion}>
@@ -278,6 +358,12 @@ function getStyles(colors: ThemeColors) {
       fontWeight: '700',
       color: colors.text,
     },
+    greeting: {
+      fontSize: 13,
+      color: colors.subtext,
+      marginBottom: 16,
+      lineHeight: 18,
+    },
     moodRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
@@ -303,6 +389,42 @@ function getStyles(colors: ThemeColors) {
     },
     photoRow: {
       marginBottom: 14,
+    },
+    capsuleToggle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      marginBottom: 10,
+      paddingVertical: 4,
+    },
+    capsuleToggleText: {
+      fontSize: 12.5,
+      fontWeight: '600',
+      color: colors.subtext,
+    },
+    capsuleToggleTextActive: {
+      color: colors.primary,
+    },
+    capsuleOptionsRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginBottom: 14,
+    },
+    capsuleOptionChip: {
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      ...softShadow(colors),
+    },
+    capsuleOptionChipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.text,
     },
     breathingSuggestion: {
       flexDirection: 'row',

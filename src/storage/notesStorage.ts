@@ -10,13 +10,20 @@ export async function getNotes(): Promise<Note[]> {
   return notes.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export async function addNote(text: string, mood?: string, photoUri?: string): Promise<Note> {
+interface AddNoteOptions {
+  mood?: string;
+  photoUri?: string;
+  revealAt?: string;
+}
+
+export async function addNote(text: string, options: AddNoteOptions = {}): Promise<Note> {
   const notes = await getNotes();
   const note: Note = {
     id: Date.now().toString(),
     text,
-    mood,
-    photoUri,
+    mood: options.mood,
+    photoUri: options.photoUri,
+    revealAt: options.revealAt,
     createdAt: new Date().toISOString(),
   };
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([note, ...notes]));

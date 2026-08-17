@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '../config';
 import { Note } from '../types/Note';
+import { InsightStats } from '../utils/insightStats';
 
 export async function getWeeklySummary(notes: Note[]): Promise<string> {
   const response = await fetch(`${API_BASE_URL}/analyze`, {
@@ -47,4 +48,20 @@ export async function getPersonalizedPrompts(notes: Note[]): Promise<string[]> {
   }
 
   return (data.prompts as string[]) ?? [];
+}
+
+export async function getPatternInsights(stats: InsightStats): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/insights`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stats }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error ?? 'İçgörüler oluşturulamadı.');
+  }
+
+  return (data.insights as string[]) ?? [];
 }

@@ -166,7 +166,7 @@ function parseListFromText(text, key) {
     if (!Array.isArray(parsed[key])) return null;
     const items = parsed[key]
       .filter((item) => typeof item === 'string' && item.trim().length > 0)
-      .map((item) => item.trim().slice(0, 120));
+      .map((item) => item.trim().slice(0, 220));
     return items.length > 0 ? items : null;
   } catch {
     return null;
@@ -271,6 +271,59 @@ app.post('/prompts', analyzeLimiter, async (req, res) => {
     const textBlock = response.content.find((block) => block.type === 'text');
     const prompts = textBlock?.text ? parseListFromText(textBlock.text, 'prompts') : null;
     return res.json({ prompts: prompts ?? FALLBACK_PROMPTS });
+  } catch (error) {
+    if (error instanceof Anthropic.RateLimitError) {
+      return res.status(429).json({ error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar dene.' });
+    }
+    if (error instanceof Anthropic.APIError) {
+      return res.status(502).json({ error: `Yapay zeka servisinde hata: ${error.message}` });
+    }
+    console.error(error);
+    return res.status(500).json({ error: 'Beklenmeyen bir hata oluştu.' });
+  }
+});
+
+const INSIGHTS_SYSTEM_PROMPT = `Sen "Günlük Asistan" uygulamasının veri analisti asistanısın.
+Kullanıcının günlük notlarından hesaplanmış SAYISAL istatistikleri okuyup, bunlara dayanan
+kısa, doğal Türkçe içgörü cümleleri üretiyorsun — bir "duygu haritası" gibi.
+KESİN KURALLAR:
+- SADECE sana verilen sayısal verilere dayanan, kanıtlanabilir gözlemler yaz. Asla veri
+  dışında bir şey uydurma veya varsayımda bulunma.
+- Tam olarak 3-4 cümle üret, her biri tek başına bir gözlem kartı gibi okunsun.
+- Her cümle en fazla 100 karakter olsun.
+- Sıcak, meraklı ve yargılamayan bir gözlemci tonu kullan — "fark ettim ki" havasında.
+- Asla tıbbi teşhis koyma, "depresyon", "anksiyete" gibi klinik terimler kullanma.
+- Eğer verilen istatistiklerden anlamlı bir örüntü çıkmıyorsa, o alanı atla.
+Yanıtını SADECE şu JSON formatında ver, başka hiçbir açıklama veya markdown ekleme:
+{"insights": ["...", "...", "..."]}`;
+
+app.post('/insights', analyzeLimiter, async (req, res) => {
+  const { stats } = req.body ?? {};
+
+  if (!stats || typeof stats !== 'object') {
+    return res.status(400).json({ error: 'stats alanı gerekli.' });
+  }
+
+  try {
+    const response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 512,
+      system: INSIGHTS_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: `Aşağıdaki JSON istatistiklerden 3-4 içgörü cümlesi üret:\n\n${JSON.stringify(stats)}`,
+        },
+      ],
+    });
+
+    if (response.stop_reason === 'refusal') {
+      return res.json({ insights: [] });
+    }
+
+    const textBlock = response.content.find((block) => block.type === 'text');
+    const insights = textBlock?.text ? parseListFromText(textBlock.text, 'insights') : null;
+    return res.json({ insights: insights ?? [] });
   } catch (error) {
     if (error instanceof Anthropic.RateLimitError) {
       return res.status(429).json({ error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar dene.' });

@@ -19,6 +19,7 @@ import {
   shouldRefreshMoodTips,
 } from '../services/notificationService';
 import { useAppLock } from '../context/AppLockContext';
+import { computeSuggestedReminderTime } from '../utils/reminderInsights';
 import { haptics } from '../utils/haptics';
 import { useToast } from '../context/ToastContext';
 import { FONT_DISPLAY_EXTRABOLD } from '../constants/fonts';
@@ -117,6 +118,18 @@ export default function SettingsScreen() {
     if (reminderEnabled) {
       await enableDailyReminder(hour, minute);
     }
+  };
+
+  const suggestedTime = useMemo(() => computeSuggestedReminderTime(notes), [notes]);
+  const showTimeSuggestion =
+    !!suggestedTime &&
+    (suggestedTime.hour !== reminderHour || suggestedTime.minute !== reminderMinute);
+
+  const handleApplySuggestedTime = () => {
+    if (!suggestedTime) return;
+    haptics.selection();
+    handlePickTime(suggestedTime.hour, suggestedTime.minute);
+    showToast('Hatırlatıcı, en çok yazdığın saate ayarlandı.');
   };
 
   const handleToggleLock = (value: boolean) => {
@@ -317,6 +330,21 @@ export default function SettingsScreen() {
                 );
               })}
             </View>
+          )}
+
+          {reminderEnabled && showTimeSuggestion && suggestedTime && (
+            <TouchableOpacity
+              style={styles.suggestionChip}
+              onPress={handleApplySuggestedTime}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel={`Önerilen saat ${String(suggestedTime.hour).padStart(2, '0')}:00, genelde bu saatte yazıyorsun`}
+            >
+              <Ionicons name="bulb-outline" size={13} color={colors.primary} />
+              <Text style={styles.suggestionChipText}>
+                Önerilen: {String(suggestedTime.hour).padStart(2, '0')}:00 (genelde bu saatte yazıyorsun)
+              </Text>
+            </TouchableOpacity>
           )}
 
           {reminderEnabled && (
@@ -626,6 +654,19 @@ function getStyles(colors: ThemeColors) {
     },
     timePresetTextActive: {
       color: colors.primaryText,
+    },
+    suggestionChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 10,
+      alignSelf: 'flex-start',
+    },
+    suggestionChipText: {
+      fontSize: 11.5,
+      fontWeight: '600',
+      color: colors.primary,
+      flexShrink: 1,
     },
     exportButton: {
       backgroundColor: colors.card,

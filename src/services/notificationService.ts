@@ -81,7 +81,7 @@ async function ensureAndroidChannel() {
   }
 }
 
-async function getCachedTips(): Promise<string[]> {
+export async function getCachedTips(): Promise<string[]> {
   const raw = await AsyncStorage.getItem(TIPS_CACHE_KEY);
   if (!raw) return FALLBACK_MESSAGES;
   try {
@@ -174,4 +174,19 @@ async function cancelAllReminderNotifications(): Promise<void> {
 export async function disableDailyReminder(): Promise<void> {
   await cancelAllReminderNotifications();
   await AsyncStorage.setItem(REMINDER_ENABLED_KEY, 'false');
+}
+
+function dayOfYear(date: Date): number {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const diff = date.getTime() - start.getTime();
+  return Math.floor(diff / (24 * 60 * 60 * 1000));
+}
+
+// Önbellekteki (yapay zeka ile üretilmiş veya varsayılan) öneri
+// listesinden, güne göre sabit (aynı gün içinde değişmeyen) bir tanesini
+// seçer — Not Yaz ekranındaki günlük karşılama satırı için kullanılır.
+export async function getTodaysGreeting(): Promise<string> {
+  const tips = await getCachedTips();
+  const index = dayOfYear(new Date()) % tips.length;
+  return tips[index];
 }
