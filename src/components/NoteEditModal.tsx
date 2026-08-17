@@ -17,22 +17,27 @@ import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { cardShadow } from '../utils/shadow';
 import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 import { haptics } from '../utils/haptics';
+import { useToast } from '../context/ToastContext';
+import PhotoAttachment from './PhotoAttachment';
 
 interface Props {
   note: Note | null;
   onClose: () => void;
-  onSave: (id: string, text: string) => void;
+  onSave: (id: string, text: string, photoUri: string | null) => void;
 }
 
 export default function NoteEditModal({ note, onClose, onSave }: Props) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { showToast } = useToast();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [text, setText] = useState('');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   useEffect(() => {
     if (note) {
       setText(note.text);
+      setPhotoUri(note.photoUri ?? null);
     }
   }, [note]);
 
@@ -40,7 +45,7 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
     if (!note) return;
     const trimmed = text.trim();
     if (!trimmed) return;
-    onSave(note.id, trimmed);
+    onSave(note.id, trimmed, photoUri);
   };
 
   const handleShare = () => {
@@ -73,6 +78,13 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
             >
               <Ionicons name="share-outline" size={20} color={colors.subtext} />
             </TouchableOpacity>
+          </View>
+          <View style={styles.photoRow}>
+            <PhotoAttachment
+              photoUri={photoUri}
+              onChange={setPhotoUri}
+              onError={(message) => showToast(message)}
+            />
           </View>
           <TextInput
             style={styles.input}
@@ -131,6 +143,9 @@ function getStyles(colors: ThemeColors) {
       fontSize: 19,
       fontFamily: FONT_DISPLAY_SEMIBOLD,
       color: colors.text,
+    },
+    photoRow: {
+      marginBottom: 12,
     },
     input: {
       borderWidth: StyleSheet.hairlineWidth,

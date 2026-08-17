@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   FlatList,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -12,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { Note } from '../types/Note';
-import { deleteNote, getNotes, restoreNote, toggleFavorite, updateNoteText } from '../storage/notesStorage';
+import { deleteNote, getNotes, restoreNote, toggleFavorite, updateNote } from '../storage/notesStorage';
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
 import MoodCalendar from '../components/MoodCalendar';
 import OnThisDayCard from '../components/OnThisDayCard';
@@ -127,8 +128,8 @@ export default function HistoryScreen() {
     setMoodFilter((prev) => (prev === emoji ? null : emoji));
   };
 
-  const handleSaveEdit = async (id: string, text: string) => {
-    await updateNoteText(id, text);
+  const handleSaveEdit = async (id: string, text: string, photoUri: string | null) => {
+    await updateNote(id, text, photoUri);
     setEditingNote(null);
     loadNotes();
   };
@@ -268,6 +269,9 @@ export default function HistoryScreen() {
               </TouchableOpacity>
             </View>
             <Text style={styles.noteText}>{item.text}</Text>
+            {item.photoUri && (
+              <Image source={{ uri: item.photoUri }} style={styles.cardPhoto} />
+            )}
           </TouchableOpacity>
         )}
       />
@@ -399,6 +403,13 @@ function getStyles(colors: ThemeColors) {
       fontSize: 15.5,
       color: colors.text,
       lineHeight: 22,
+    },
+    cardPhoto: {
+      width: '100%',
+      height: 140,
+      borderRadius: 12,
+      marginTop: 10,
+      backgroundColor: colors.background,
     },
     emptyContainer: {
       flex: 1,

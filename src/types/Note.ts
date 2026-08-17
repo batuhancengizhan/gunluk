@@ -5,4 +5,5 @@ export interface Note {
   updatedAt?: string;
   isFavorite?: boolean;
   mood?: string;
+  photoUri?: string;
 }

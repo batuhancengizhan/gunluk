@@ -14,6 +14,7 @@ import {
 import { addNote, getNotes } from '../storage/notesStorage';
 import BackgroundArt, { hasBackgroundArt } from '../components/BackgroundArt';
 import BreathingExercise from '../components/BreathingExercise';
+import PhotoAttachment from '../components/PhotoAttachment';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -39,6 +40,7 @@ export default function WriteNoteScreen() {
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [text, setText] = useState('');
   const [mood, setMood] = useState<string | undefined>(undefined);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [streak, setStreak] = useState(0);
   const [prompts, setPrompts] = useState<string[]>([]);
@@ -92,9 +94,10 @@ export default function WriteNoteScreen() {
     try {
       const previousLongestStreak = calculateLongestStreak(await getNotes());
 
-      await addNote(trimmed, mood);
+      await addNote(trimmed, mood, photoUri ?? undefined);
       setText('');
       setMood(undefined);
+      setPhotoUri(null);
       setShowBreathingSuggestion(false);
       const notes = await getNotes();
       const newStreak = calculateStreak(notes);
@@ -150,6 +153,14 @@ export default function WriteNoteScreen() {
               <Text style={styles.moodEmoji}>{emoji}</Text>
             </TouchableOpacity>
           ))}
+        </View>
+
+        <View style={styles.photoRow}>
+          <PhotoAttachment
+            photoUri={photoUri}
+            onChange={setPhotoUri}
+            onError={(message) => showToast(message)}
+          />
         </View>
 
         {showBreathingSuggestion && (
@@ -289,6 +300,9 @@ function getStyles(colors: ThemeColors) {
     },
     moodEmoji: {
       fontSize: 21,
+    },
+    photoRow: {
+      marginBottom: 14,
     },
     breathingSuggestion: {
       flexDirection: 'row',

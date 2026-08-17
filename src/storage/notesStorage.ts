@@ -10,12 +10,13 @@ export async function getNotes(): Promise<Note[]> {
   return notes.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-export async function addNote(text: string, mood?: string): Promise<Note> {
+export async function addNote(text: string, mood?: string, photoUri?: string): Promise<Note> {
   const notes = await getNotes();
   const note: Note = {
     id: Date.now().toString(),
     text,
     mood,
+    photoUri,
     createdAt: new Date().toISOString(),
   };
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([note, ...notes]));
@@ -36,11 +37,24 @@ export async function restoreNote(note: Note): Promise<void> {
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([note, ...notes]));
 }
 
-export async function updateNoteText(id: string, text: string): Promise<void> {
+// photoUri: string ise fotoğrafı değiştirir, null ise kaldırır,
+// undefined ise mevcut fotoğrafa dokunmaz.
+export async function updateNote(
+  id: string,
+  text: string,
+  photoUri?: string | null
+): Promise<void> {
   const notes = await getNotes();
-  const updated = notes.map((n) =>
-    n.id === id ? { ...n, text, updatedAt: new Date().toISOString() } : n
-  );
+  const updated = notes.map((n) => {
+    if (n.id !== id) return n;
+    const next: Note = { ...n, text, updatedAt: new Date().toISOString() };
+    if (photoUri === null) {
+      delete next.photoUri;
+    } else if (photoUri !== undefined) {
+      next.photoUri = photoUri;
+    }
+    return next;
+  });
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify(updated));
 }
 

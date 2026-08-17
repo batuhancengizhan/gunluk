@@ -19,6 +19,7 @@ import {
   shouldRefreshMoodTips,
 } from '../services/notificationService';
 import { useAppLock } from '../context/AppLockContext';
+import { haptics } from '../utils/haptics';
 import { useToast } from '../context/ToastContext';
 import { FONT_DISPLAY_EXTRABOLD } from '../constants/fonts';
 import PinSetupModal from '../components/PinSetupModal';
@@ -40,7 +41,14 @@ const TIME_PRESETS: { label: string; hour: number; minute: number }[] = [
 export default function SettingsScreen() {
   const { colors, mode, setMode } = useTheme();
   const { backgroundThemeId, setBackgroundThemeId } = useBackgroundTheme();
-  const { lockEnabled, setPin, disableLock } = useAppLock();
+  const {
+    lockEnabled,
+    setPin,
+    disableLock,
+    biometricSupported,
+    biometricEnabled,
+    setBiometricEnabled,
+  } = useAppLock();
   const { showToast } = useToast();
   const styles = useMemo(() => getStyles(colors), [colors]);
 
@@ -120,6 +128,12 @@ export default function SettingsScreen() {
         { text: 'Kapat', style: 'destructive', onPress: () => disableLock() },
       ]);
     }
+  };
+
+  const handleToggleBiometric = async (value: boolean) => {
+    haptics.selection();
+    await setBiometricEnabled(value);
+    showToast(value ? 'Face ID / Parmak İzi ile açma etkin.' : 'Face ID / Parmak İzi ile açma kapatıldı.');
   };
 
   const handlePinConfirm = async (pin: string) => {
@@ -346,6 +360,25 @@ export default function SettingsScreen() {
               accessibilityHint={lockEnabled ? 'Kapatmak için dokun' : 'Açmak için dokun'}
             />
           </View>
+
+          {lockEnabled && biometricSupported && (
+            <View style={styles.biometricRow}>
+              <View style={styles.reminderTextGroup}>
+                <Text style={styles.appName}>Face ID / Parmak İzi ile Aç</Text>
+                <Text style={styles.reminderSubtext}>
+                  Kilit ekranında PIN yerine biyometrik doğrulamayı dene.
+                </Text>
+              </View>
+              <Switch
+                value={biometricEnabled}
+                onValueChange={handleToggleBiometric}
+                trackColor={{ false: colors.border, true: colors.primary }}
+                thumbColor={colors.primaryText}
+                accessibilityLabel="Face ID veya parmak izi ile açma"
+                accessibilityHint={biometricEnabled ? 'Kapatmak için dokun' : 'Açmak için dokun'}
+              />
+            </View>
+          )}
         </View>
       </View>
 
@@ -530,6 +563,16 @@ function getStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 12,
+    },
+    biometricRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 12,
+      marginTop: 14,
+      paddingTop: 14,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border,
     },
     reminderTextGroup: {
       flex: 1,

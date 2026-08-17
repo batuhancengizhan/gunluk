@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,12 +10,29 @@ import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 
 export default function LockScreen() {
   const { colors } = useTheme();
-  const { unlock, disableLock, lockoutUntil } = useAppLock();
+  const {
+    unlock,
+    disableLock,
+    lockoutUntil,
+    biometricSupported,
+    biometricEnabled,
+    unlockWithBiometrics,
+  } = useAppLock();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const autoPromptedRef = useRef(false);
+
+  const canUseBiometrics = biometricSupported && biometricEnabled;
+
+  useEffect(() => {
+    if (canUseBiometrics && !autoPromptedRef.current) {
+      autoPromptedRef.current = true;
+      unlockWithBiometrics();
+    }
+  }, [canUseBiometrics, unlockWithBiometrics]);
 
   useEffect(() => {
     if (!lockoutUntil) {
@@ -86,6 +103,20 @@ export default function LockScreen() {
       <View style={styles.padWrap}>
         <PinPad value={pin} onChange={handleChange} disabled={isLockedOut} />
       </View>
+      {canUseBiometrics && !isLockedOut && (
+        <TouchableOpacity
+          onPress={() => {
+            haptics.selection();
+            unlockWithBiometrics();
+          }}
+          style={styles.biometricButton}
+          accessibilityRole="button"
+          accessibilityLabel="Face ID veya parmak izi ile aç"
+        >
+          <Ionicons name="finger-print-outline" size={16} color={colors.primary} />
+          <Text style={styles.biometricText}>Face ID / Parmak İzi ile Aç</Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity onPress={handleForgotPin} style={styles.forgotButton}>
         <Text style={styles.forgotText}>PIN'i unuttum</Text>
       </TouchableOpacity>
@@ -134,6 +165,18 @@ function getStyles(colors: ThemeColors) {
     },
     padWrap: {
       marginTop: 28,
+    },
+    biometricButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      marginTop: 22,
+      padding: 8,
+    },
+    biometricText: {
+      color: colors.primary,
+      fontSize: 13,
+      fontWeight: '600',
     },
     forgotButton: {
       marginTop: 28,
