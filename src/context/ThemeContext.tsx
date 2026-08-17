@@ -19,33 +19,36 @@ export interface ThemeColors {
   shadow: string;
 }
 
+// Zeytin yeşili + kiremit turuncusu harmanı: ana vurgu kiremit
+// turuncusu (butonlar, aktif durumlar), ikincil vurgu (favoriler) zeytin
+// yeşili — nötr gri yerine hafif sıcak, topraksı bir zemin tonu kullanılıyor.
 const lightColors: ThemeColors = {
-  background: '#FAFAF9',
+  background: '#FAF8F2',
   card: '#FFFFFF',
-  text: '#18181B',
-  subtext: '#71717A',
-  border: '#E9E9ED',
-  primary: '#4338CA',
+  text: '#211C15',
+  subtext: '#7C7364',
+  border: '#EAE3D5',
+  primary: '#C1592E',
   primaryText: '#FFFFFF',
-  danger: '#DC2626',
-  dangerBg: '#FDEDED',
-  favorite: '#C08A1E',
-  favoriteBg: '#FBF3E1',
-  shadow: 'rgba(24, 24, 27, 0.08)',
+  danger: '#C0392B',
+  dangerBg: '#FBEAE5',
+  favorite: '#748034',
+  favoriteBg: '#EEF0DF',
+  shadow: 'rgba(33, 28, 21, 0.08)',
 };
 
 const darkColors: ThemeColors = {
-  background: '#0C0C0F',
-  card: '#18181C',
-  text: '#F4F4F5',
-  subtext: '#9A9AA5',
-  border: '#28282E',
-  primary: '#8583F5',
-  primaryText: '#0C0C0F',
-  danger: '#F87171',
-  dangerBg: '#2A1616',
-  favorite: '#E3BB56',
-  favoriteBg: '#2A2410',
+  background: '#151209',
+  card: '#221D14',
+  text: '#F6F1E7',
+  subtext: '#AB9F8B',
+  border: '#352E20',
+  primary: '#E08B5B',
+  primaryText: '#1A140D',
+  danger: '#E0705F',
+  dangerBg: '#2E1712',
+  favorite: '#B7C36A',
+  favoriteBg: '#262916',
   shadow: 'rgba(0, 0, 0, 0.5)',
 };
 

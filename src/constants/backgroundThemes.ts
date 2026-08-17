@@ -16,6 +16,7 @@ export const BACKGROUND_THEMES: BackgroundTheme[] = [
   { id: 'dusk', label: 'Alacakaranlık', colors: ['#F0EDF7', '#E1DAF0', '#CEC1E6'] },
   { id: 'lavender', label: 'Lavanta', colors: ['#F5F0F9', '#EBE1F5', '#DECBF0'] },
   { id: 'sunset', label: 'Gün Batımı', colors: ['#FAECEC', '#F3D6D8', '#E9B9C0'] },
+  { id: 'earth', label: 'Toprak', colors: ['#FBEEE3', '#F0E3C8', '#DCE0B4'] },
 ];
 
 export function getBackgroundTheme(id: string): BackgroundTheme {
