@@ -17,6 +17,7 @@ import { deleteNote, getNotes, restoreNote, toggleFavorite, updateNote } from '.
 import WeeklySummaryCard from '../components/WeeklySummaryCard';
 import PatternInsightsCard from '../components/PatternInsightsCard';
 import MoodCalendar from '../components/MoodCalendar';
+import MoodTrendChart from '../components/MoodTrendChart';
 import OnThisDayCard from '../components/OnThisDayCard';
 import NoteEditModal from '../components/NoteEditModal';
 import AudioPlaybackButton from '../components/AudioPlaybackButton';
@@ -203,6 +204,7 @@ export default function HistoryScreen() {
             <WeeklySummaryCard notes={notes} />
             <PatternInsightsCard notes={notes} />
             <MoodCalendar notes={notes} onDayPress={setEditingNote} />
+            <MoodTrendChart notes={notes} />
 
             <View style={styles.searchRow}>
               <View style={styles.searchBox}>
