@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { clearAllNotes, getNotes, mergeNotesFromBackup } from '../storage/notesStorage';
 import { formatNotesForExport } from '../utils/exportNotes';
 import { pickNotesBackup, shareNotesBackup } from '../utils/backup';
+import { exportNotesToPdf } from '../utils/pdfExport';
 import { Note } from '../types/Note';
 import { ThemeColors, ThemeMode, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
@@ -60,6 +61,7 @@ export default function SettingsScreen() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [tipsRefreshing, setTipsRefreshing] = useState(false);
   const [backupWorking, setBackupWorking] = useState(false);
+  const [pdfWorking, setPdfWorking] = useState(false);
   const [restoreWorking, setRestoreWorking] = useState(false);
 
   useFocusEffect(
@@ -165,6 +167,22 @@ export default function SettingsScreen() {
       await Share.share({ message: formatNotesForExport(notes) });
     } catch {
       showToast('Notlar dışa aktarılamadı.');
+    }
+  };
+
+  const handlePdfExport = async () => {
+    const currentNotes = await getNotes();
+    if (currentNotes.length === 0) {
+      showToast('Dışa aktarılacak henüz bir notun yok.');
+      return;
+    }
+    setPdfWorking(true);
+    try {
+      await exportNotesToPdf(currentNotes);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'PDF oluşturulamadı.');
+    } finally {
+      setPdfWorking(false);
     }
   };
 
@@ -454,6 +472,18 @@ export default function SettingsScreen() {
                 <ActivityIndicator size="small" color={colors.text} />
               ) : (
                 <Text style={styles.exportButtonText}>Yedekten Geri Yükle</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.exportButton, styles.dataButtonSpacing]}
+              onPress={handlePdfExport}
+              disabled={pdfWorking}
+              activeOpacity={0.85}
+            >
+              {pdfWorking ? (
+                <ActivityIndicator size="small" color={colors.text} />
+              ) : (
+                <Text style={styles.exportButtonText}>PDF Olarak Dışa Aktar</Text>
               )}
             </TouchableOpacity>
           </>

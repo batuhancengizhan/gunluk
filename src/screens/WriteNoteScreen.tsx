@@ -29,6 +29,7 @@ import {
 } from '../services/promptsService';
 import { getTodaysGreeting, requestNotificationPermission } from '../services/notificationService';
 import { TIME_CAPSULE_OPTIONS, scheduleTimeCapsuleNotification } from '../utils/timeCapsule';
+import { ENTRY_TEMPLATES, EntryTemplate } from '../constants/templates';
 import { Ionicons } from '@expo/vector-icons';
 import { haptics } from '../utils/haptics';
 import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
@@ -78,6 +79,12 @@ export default function WriteNoteScreen() {
   const handlePromptPress = (prompt: string) => {
     haptics.selection();
     setText((prev) => (prev ? prev : `${prompt}\n`));
+    inputRef.current?.focus();
+  };
+
+  const handleTemplatePress = (template: EntryTemplate) => {
+    haptics.selection();
+    setText(template.skeleton);
     inputRef.current?.focus();
   };
 
@@ -272,13 +279,26 @@ export default function WriteNoteScreen() {
           </View>
         )}
 
-        {text.length === 0 && prompts.length > 0 && (
+        {text.length === 0 && (prompts.length > 0 || ENTRY_TEMPLATES.length > 0) && (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.promptScroll}
             contentContainerStyle={styles.promptRow}
           >
+            {ENTRY_TEMPLATES.map((template) => (
+              <TouchableOpacity
+                key={template.id}
+                style={styles.templateChip}
+                onPress={() => handleTemplatePress(template)}
+                activeOpacity={0.85}
+                accessibilityRole="button"
+                accessibilityLabel={`${template.label} şablonuyla yaz`}
+              >
+                <Ionicons name={template.icon as never} size={13} color={colors.primary} />
+                <Text style={styles.templateChipText}>{template.label}</Text>
+              </TouchableOpacity>
+            ))}
             {prompts.map((prompt) => (
               <TouchableOpacity
                 key={prompt}
@@ -474,6 +494,22 @@ function getStyles(colors: ThemeColors) {
     promptRow: {
       gap: 8,
       paddingRight: 8,
+    },
+    templateChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: colors.favoriteBg,
+      borderRadius: 14,
+      paddingHorizontal: 14,
+      paddingVertical: 9,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    templateChipText: {
+      fontSize: 12.5,
+      color: colors.primary,
+      fontWeight: '700',
     },
     promptChip: {
       backgroundColor: colors.card,
