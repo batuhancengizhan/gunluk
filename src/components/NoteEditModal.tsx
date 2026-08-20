@@ -19,12 +19,13 @@ import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 import { haptics } from '../utils/haptics';
 import { useToast } from '../context/ToastContext';
 import PhotoAttachment from './PhotoAttachment';
+import VoiceNoteAttachment from './VoiceNoteAttachment';
 import { extractTags } from '../utils/tags';
 
 interface Props {
   note: Note | null;
   onClose: () => void;
-  onSave: (id: string, text: string, photoUri: string | null) => void;
+  onSave: (id: string, text: string, photoUri: string | null, audioUri: string | null) => void;
 }
 
 export default function NoteEditModal({ note, onClose, onSave }: Props) {
@@ -34,11 +35,13 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
   const styles = useMemo(() => getStyles(colors), [colors]);
   const [text, setText] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
 
   useEffect(() => {
     if (note) {
       setText(note.text);
       setPhotoUri(note.photoUri ?? null);
+      setAudioUri(note.audioUri ?? null);
     }
   }, [note]);
 
@@ -48,7 +51,7 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
     if (!note) return;
     const trimmed = text.trim();
     if (!trimmed) return;
-    onSave(note.id, trimmed, photoUri);
+    onSave(note.id, trimmed, photoUri, audioUri);
   };
 
   const handleShare = () => {
@@ -86,6 +89,13 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
             <PhotoAttachment
               photoUri={photoUri}
               onChange={setPhotoUri}
+              onError={(message) => showToast(message)}
+            />
+          </View>
+          <View style={styles.photoRow}>
+            <VoiceNoteAttachment
+              audioUri={audioUri}
+              onChange={setAudioUri}
               onError={(message) => showToast(message)}
             />
           </View>

@@ -15,6 +15,7 @@ interface AddNoteOptions {
   mood?: string;
   photoUri?: string;
   revealAt?: string;
+  audioUri?: string;
 }
 
 export async function addNote(text: string, options: AddNoteOptions = {}): Promise<Note> {
@@ -25,6 +26,7 @@ export async function addNote(text: string, options: AddNoteOptions = {}): Promi
     mood: options.mood,
     photoUri: options.photoUri,
     revealAt: options.revealAt,
+    audioUri: options.audioUri,
     tags: extractTags(text),
     createdAt: new Date().toISOString(),
   };
@@ -46,12 +48,13 @@ export async function restoreNote(note: Note): Promise<void> {
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([note, ...notes]));
 }
 
-// photoUri: string ise fotoğrafı değiştirir, null ise kaldırır,
-// undefined ise mevcut fotoğrafa dokunmaz.
+// photoUri/audioUri: string ise değiştirir, null ise kaldırır,
+// undefined ise mevcut değere dokunmaz.
 export async function updateNote(
   id: string,
   text: string,
-  photoUri?: string | null
+  photoUri?: string | null,
+  audioUri?: string | null
 ): Promise<void> {
   const notes = await getNotes();
   const updated = notes.map((n) => {
@@ -61,6 +64,11 @@ export async function updateNote(
       delete next.photoUri;
     } else if (photoUri !== undefined) {
       next.photoUri = photoUri;
+    }
+    if (audioUri === null) {
+      delete next.audioUri;
+    } else if (audioUri !== undefined) {
+      next.audioUri = audioUri;
     }
     return next;
   });

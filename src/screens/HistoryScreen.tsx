@@ -19,6 +19,7 @@ import PatternInsightsCard from '../components/PatternInsightsCard';
 import MoodCalendar from '../components/MoodCalendar';
 import OnThisDayCard from '../components/OnThisDayCard';
 import NoteEditModal from '../components/NoteEditModal';
+import AudioPlaybackButton from '../components/AudioPlaybackButton';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { cardShadow, softShadow } from '../utils/shadow';
@@ -162,8 +163,13 @@ export default function HistoryScreen() {
     setTagFilter((prev) => (prev === tag ? null : tag));
   };
 
-  const handleSaveEdit = async (id: string, text: string, photoUri: string | null) => {
-    await updateNote(id, text, photoUri);
+  const handleSaveEdit = async (
+    id: string,
+    text: string,
+    photoUri: string | null,
+    audioUri: string | null
+  ) => {
+    await updateNote(id, text, photoUri, audioUri);
     setEditingNote(null);
     loadNotes();
   };
@@ -349,6 +355,9 @@ export default function HistoryScreen() {
             {item.photoUri && (
               <Image source={{ uri: item.photoUri }} style={styles.cardPhoto} />
             )}
+            {item.audioUri && (
+              <AudioPlaybackButton uri={item.audioUri} style={styles.cardAudioButton} />
+            )}
             {isRevealPending(item.revealAt) && (
               <View style={styles.capsuleBadge}>
                 <Ionicons name="mail-outline" size={12} color={colors.primary} />
@@ -533,6 +542,9 @@ function getStyles(colors: ThemeColors) {
       fontSize: 11,
       fontWeight: '600',
       color: colors.favorite,
+    },
+    cardAudioButton: {
+      marginTop: 10,
     },
     cardPhoto: {
       width: '100%',

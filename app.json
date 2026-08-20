@@ -40,7 +40,13 @@
           "color": "#C1592E"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Sesli notlarını kaydedebilmek için mikrofonuna erişim gerekiyor."
+        }
+      ]
     ]
   }
 }

@@ -8,4 +8,5 @@ export interface Note {
   photoUri?: string;
   revealAt?: string;
   tags?: string[];
+  audioUri?: string;
 }

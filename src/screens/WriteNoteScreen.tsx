@@ -15,6 +15,7 @@ import { addNote, getNotes } from '../storage/notesStorage';
 import BackgroundArt, { hasBackgroundArt } from '../components/BackgroundArt';
 import BreathingExercise from '../components/BreathingExercise';
 import PhotoAttachment from '../components/PhotoAttachment';
+import VoiceNoteAttachment from '../components/VoiceNoteAttachment';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -46,6 +47,7 @@ export default function WriteNoteScreen() {
   const [text, setText] = useState('');
   const [mood, setMood] = useState<string | undefined>(undefined);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [audioUri, setAudioUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [streak, setStreak] = useState(0);
   const [prompts, setPrompts] = useState<string[]>([]);
@@ -120,6 +122,7 @@ export default function WriteNoteScreen() {
       const createdNote = await addNote(trimmed, {
         mood,
         photoUri: photoUri ?? undefined,
+        audioUri: audioUri ?? undefined,
         revealAt,
       });
 
@@ -135,6 +138,7 @@ export default function WriteNoteScreen() {
       setText('');
       setMood(undefined);
       setPhotoUri(null);
+      setAudioUri(null);
       setCapsuleOptionId(null);
       setShowCapsuleOptions(false);
       setShowBreathingSuggestion(false);
@@ -202,6 +206,14 @@ export default function WriteNoteScreen() {
           <PhotoAttachment
             photoUri={photoUri}
             onChange={setPhotoUri}
+            onError={(message) => showToast(message)}
+          />
+        </View>
+
+        <View style={styles.photoRow}>
+          <VoiceNoteAttachment
+            audioUri={audioUri}
+            onChange={setAudioUri}
             onError={(message) => showToast(message)}
           />
         </View>

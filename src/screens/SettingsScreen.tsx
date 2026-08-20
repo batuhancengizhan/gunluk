@@ -26,6 +26,7 @@ import { useToast } from '../context/ToastContext';
 import { FONT_DISPLAY_EXTRABOLD } from '../constants/fonts';
 import PinSetupModal from '../components/PinSetupModal';
 import StatsGrid from '../components/StatsGrid';
+import JournalOverviewModal from '../components/JournalOverviewModal';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: 'light', label: 'Açık' },
@@ -63,6 +64,7 @@ export default function SettingsScreen() {
   const [backupWorking, setBackupWorking] = useState(false);
   const [pdfWorking, setPdfWorking] = useState(false);
   const [restoreWorking, setRestoreWorking] = useState(false);
+  const [overviewVisible, setOverviewVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -250,8 +252,27 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>İstatistikler</Text>
           <StatsGrid notes={notes} />
+          <TouchableOpacity
+            style={styles.overviewButton}
+            onPress={() => {
+              haptics.selection();
+              setOverviewVisible(true);
+            }}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Tüm istatistiklerimi gör"
+          >
+            <Ionicons name="bar-chart-outline" size={14} color={colors.primary} />
+            <Text style={styles.overviewButtonText}>Tüm İstatistiklerimi Gör</Text>
+          </TouchableOpacity>
         </View>
       )}
+
+      <JournalOverviewModal
+        visible={overviewVisible}
+        onClose={() => setOverviewVisible(false)}
+        notes={notes}
+      />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Görünüm</Text>
@@ -540,6 +561,19 @@ function getStyles(colors: ThemeColors) {
       color: colors.text,
       marginBottom: 6,
       lineHeight: 20,
+    },
+    overviewButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      marginTop: 12,
+      paddingVertical: 10,
+    },
+    overviewButtonText: {
+      fontSize: 12.5,
+      fontWeight: '700',
+      color: colors.primary,
     },
     themeRow: {
       flexDirection: 'row',
