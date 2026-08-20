@@ -7,4 +7,5 @@ export interface Note {
   mood?: string;
   photoUri?: string;
   revealAt?: string;
+  tags?: string[];
 }

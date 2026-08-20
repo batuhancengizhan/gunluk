@@ -30,6 +30,7 @@ import {
 import { getTodaysGreeting, requestNotificationPermission } from '../services/notificationService';
 import { TIME_CAPSULE_OPTIONS, scheduleTimeCapsuleNotification } from '../utils/timeCapsule';
 import { ENTRY_TEMPLATES, EntryTemplate } from '../constants/templates';
+import { extractTags } from '../utils/tags';
 import { Ionicons } from '@expo/vector-icons';
 import { haptics } from '../utils/haptics';
 import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
@@ -75,6 +76,8 @@ export default function WriteNoteScreen() {
     const trimmed = text.trim();
     return trimmed ? trimmed.split(/\s+/).length : 0;
   }, [text]);
+
+  const liveTags = useMemo(() => extractTags(text), [text]);
 
   const handlePromptPress = (prompt: string) => {
     haptics.selection();
@@ -316,12 +319,21 @@ export default function WriteNoteScreen() {
           ref={inputRef}
           style={styles.input}
           multiline
-          placeholder="Günlük notunu buraya yaz..."
+          placeholder="Günlük notunu buraya yaz... (#etiket ekleyebilirsin)"
           placeholderTextColor={colors.subtext}
           value={text}
           onChangeText={setText}
           textAlignVertical="top"
         />
+        {liveTags.length > 0 && (
+          <View style={styles.liveTagRow}>
+            {liveTags.map((tag) => (
+              <View key={tag} style={styles.liveTagChip}>
+                <Text style={styles.liveTagChipText}>#{tag}</Text>
+              </View>
+            ))}
+          </View>
+        )}
         {text.length > 0 && (
           <Text style={styles.wordCount}>{wordCount} kelime</Text>
         )}
@@ -536,6 +548,23 @@ function getStyles(colors: ThemeColors) {
       backgroundColor: colors.card,
       color: colors.text,
       ...cardShadow(colors),
+    },
+    liveTagRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 10,
+    },
+    liveTagChip: {
+      backgroundColor: colors.favoriteBg,
+      borderRadius: 10,
+      paddingHorizontal: 9,
+      paddingVertical: 3,
+    },
+    liveTagChipText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.favorite,
     },
     wordCount: {
       fontSize: 11.5,

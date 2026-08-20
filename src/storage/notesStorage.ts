@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Note } from '../types/Note';
+import { extractTags } from '../utils/tags';
 
 const NOTES_KEY = '@gunluk_asistan/notes';
 
@@ -24,6 +25,7 @@ export async function addNote(text: string, options: AddNoteOptions = {}): Promi
     mood: options.mood,
     photoUri: options.photoUri,
     revealAt: options.revealAt,
+    tags: extractTags(text),
     createdAt: new Date().toISOString(),
   };
   await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([note, ...notes]));
@@ -54,7 +56,7 @@ export async function updateNote(
   const notes = await getNotes();
   const updated = notes.map((n) => {
     if (n.id !== id) return n;
-    const next: Note = { ...n, text, updatedAt: new Date().toISOString() };
+    const next: Note = { ...n, text, tags: extractTags(text), updatedAt: new Date().toISOString() };
     if (photoUri === null) {
       delete next.photoUri;
     } else if (photoUri !== undefined) {
@@ -97,7 +99,9 @@ export async function mergeNotesFromBackup(
   const existingIds = new Set(notes.map((n) => n.id));
   const validNotes = backupNotes.filter(isValidNote);
 
-  const toAdd = validNotes.filter((n) => !existingIds.has(n.id));
+  const toAdd = validNotes
+    .filter((n) => !existingIds.has(n.id))
+    .map((n) => ({ ...n, tags: extractTags(n.text) }));
   if (toAdd.length > 0) {
     await AsyncStorage.setItem(NOTES_KEY, JSON.stringify([...notes, ...toAdd]));
   }

@@ -19,6 +19,7 @@ import { FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
 import { haptics } from '../utils/haptics';
 import { useToast } from '../context/ToastContext';
 import PhotoAttachment from './PhotoAttachment';
+import { extractTags } from '../utils/tags';
 
 interface Props {
   note: Note | null;
@@ -40,6 +41,8 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
       setPhotoUri(note.photoUri ?? null);
     }
   }, [note]);
+
+  const liveTags = useMemo(() => extractTags(text), [text]);
 
   const handleSave = () => {
     if (!note) return;
@@ -95,6 +98,15 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
             autoFocus
             placeholderTextColor={colors.subtext}
           />
+          {liveTags.length > 0 && (
+            <View style={styles.liveTagRow}>
+              {liveTags.map((tag) => (
+                <View key={tag} style={styles.liveTagChip}>
+                  <Text style={styles.liveTagChipText}>#{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
               <Text style={styles.cancelText}>Vazgeç</Text>
@@ -157,6 +169,23 @@ function getStyles(colors: ThemeColors) {
       minHeight: 120,
       backgroundColor: colors.card,
       color: colors.text,
+    },
+    liveTagRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 10,
+    },
+    liveTagChip: {
+      backgroundColor: colors.favoriteBg,
+      borderRadius: 10,
+      paddingHorizontal: 9,
+      paddingVertical: 3,
+    },
+    liveTagChipText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.favorite,
     },
     buttonRow: {
       flexDirection: 'row',

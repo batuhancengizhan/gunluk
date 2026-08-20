@@ -52,6 +52,7 @@ export default function HistoryScreen() {
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [sortAscending, setSortAscending] = useState(false);
   const [moodFilter, setMoodFilter] = useState<string | null>(null);
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   const loadNotes = useCallback(async () => {
@@ -82,10 +83,25 @@ export default function HistoryScreen() {
     return ordered;
   }, [notes]);
 
+  const availableTags = useMemo(() => {
+    const seen = new Set<string>();
+    const ordered: string[] = [];
+    for (const note of notes) {
+      for (const tag of note.tags ?? []) {
+        if (!seen.has(tag)) {
+          seen.add(tag);
+          ordered.push(tag);
+        }
+      }
+    }
+    return ordered;
+  }, [notes]);
+
   const filteredNotes = useMemo(() => {
     const filtered = notes.filter((note) => {
       if (favoritesOnly && !note.isFavorite) return false;
       if (moodFilter && note.mood !== moodFilter) return false;
+      if (tagFilter && !note.tags?.includes(tagFilter)) return false;
       if (query.trim() && !note.text.toLowerCase().includes(query.trim().toLowerCase())) {
         return false;
       }
@@ -93,7 +109,7 @@ export default function HistoryScreen() {
     });
     // notes zaten en yeniden en eskiye sıralı geliyor (bkz. notesStorage.getNotes)
     return sortAscending ? [...filtered].reverse() : filtered;
-  }, [notes, query, favoritesOnly, moodFilter, sortAscending]);
+  }, [notes, query, favoritesOnly, moodFilter, tagFilter, sortAscending]);
 
   const handleDelete = async (note: Note) => {
     haptics.medium();
@@ -139,6 +155,11 @@ export default function HistoryScreen() {
   const handleMoodFilterPress = (emoji: string) => {
     haptics.selection();
     setMoodFilter((prev) => (prev === emoji ? null : emoji));
+  };
+
+  const handleTagFilterPress = (tag: string) => {
+    haptics.selection();
+    setTagFilter((prev) => (prev === tag ? null : tag));
   };
 
   const handleSaveEdit = async (id: string, text: string, photoUri: string | null) => {
@@ -248,6 +269,39 @@ export default function HistoryScreen() {
               </ScrollView>
             )}
 
+            {availableTags.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.tagFilterScroll}
+                contentContainerStyle={styles.tagFilterRow}
+              >
+                {availableTags.map((tag) => {
+                  const active = tagFilter === tag;
+                  return (
+                    <TouchableOpacity
+                      key={tag}
+                      style={[styles.tagFilterChip, active && styles.tagFilterChipActive]}
+                      onPress={() => handleTagFilterPress(tag)}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel={`#${tag} etiketine göre filtrele`}
+                      accessibilityState={{ selected: active }}
+                    >
+                      <Text
+                        style={[
+                          styles.tagFilterChipText,
+                          active && styles.tagFilterChipTextActive,
+                        ]}
+                      >
+                        #{tag}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+
             {filteredNotes.length === 0 && (
               <Text style={styles.noResultsText}>Eşleşen not bulunamadı.</Text>
             )}
@@ -283,6 +337,15 @@ export default function HistoryScreen() {
               </TouchableOpacity>
             </View>
             <Text style={styles.noteText}>{item.text}</Text>
+            {item.tags && item.tags.length > 0 && (
+              <View style={styles.cardTagRow}>
+                {item.tags.map((tag) => (
+                  <View key={tag} style={styles.cardTagChip}>
+                    <Text style={styles.cardTagChipText}>#{tag}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
             {item.photoUri && (
               <Image source={{ uri: item.photoUri }} style={styles.cardPhoto} />
             )}
@@ -379,6 +442,34 @@ function getStyles(colors: ThemeColors) {
     moodChipEmoji: {
       fontSize: 17,
     },
+    tagFilterScroll: {
+      marginBottom: 12,
+    },
+    tagFilterRow: {
+      gap: 8,
+      paddingRight: 8,
+    },
+    tagFilterChip: {
+      backgroundColor: colors.card,
+      borderRadius: 14,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      ...softShadow(colors),
+    },
+    tagFilterChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    tagFilterChipText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: colors.subtext,
+    },
+    tagFilterChipTextActive: {
+      color: colors.primaryText,
+    },
     noResultsText: {
       textAlign: 'center',
       color: colors.subtext,
@@ -425,6 +516,23 @@ function getStyles(colors: ThemeColors) {
       fontSize: 15.5,
       color: colors.text,
       lineHeight: 22,
+    },
+    cardTagRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 8,
+    },
+    cardTagChip: {
+      backgroundColor: colors.favoriteBg,
+      borderRadius: 10,
+      paddingHorizontal: 9,
+      paddingVertical: 3,
+    },
+    cardTagChipText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.favorite,
     },
     cardPhoto: {
       width: '100%',
