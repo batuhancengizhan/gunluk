@@ -347,6 +347,8 @@ KESİN KURALLAR:
   belirtisi görürsen, nazikçe bir uzmana veya güvendiği birine danışmasını öner.
 - Notlardaki mahrem detayları gereksiz yere tekrar etme; sadece doğrudan soruyla ilgili
   kısma değin.
+- SADECE düz metin yaz. Markdown başlığı (#), kalın (**), liste işareti (-, *) veya başka
+  hiçbir biçimlendirme kullanma — bu bir sohbet balonu, bir doküman değil.
 - Türkçe yanıt ver.`;
 
 const chatLimiter = rateLimit({
