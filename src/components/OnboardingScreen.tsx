@@ -30,6 +30,11 @@ const SLIDES: { icon: keyof typeof Ionicons.glyphMap; title: string; body: strin
     body: 'Haftalık notlarını yapay zeka analiz etsin, duygu durumundaki eğilimleri ve temaları senin için özetlesin.',
   },
   {
+    icon: 'chatbubble-ellipses-outline',
+    title: 'Asistanınla Konuş',
+    body: 'Asistan sekmesinden geçmiş notların hakkında soru sor — sadece yazdıklarına dayanarak seninle konuşur.',
+  },
+  {
     icon: 'lock-closed-outline',
     title: 'Tamamen Özel',
     body: 'Notların sadece cihazında saklanır. İstersen PIN kilidiyle günlüğünü ekstra güvenceye al.',
@@ -143,10 +148,12 @@ function getStyles(colors: ThemeColors) {
       paddingHorizontal: 36,
     },
     iconWrap: {
-      width: 88,
-      height: 88,
-      borderRadius: 44,
+      width: 80,
+      height: 80,
+      borderRadius: 22,
       backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 28,
@@ -186,7 +193,7 @@ function getStyles(colors: ThemeColors) {
     },
     nextButton: {
       backgroundColor: colors.primary,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 16,
       width: '100%',
       alignItems: 'center',

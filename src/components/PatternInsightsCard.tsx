@@ -17,7 +17,29 @@ export default function PatternInsightsCard({ notes }: { notes: Note[] }) {
   const [error, setError] = useState<string | null>(null);
 
   if (notes.length < MIN_NOTES_FOR_INSIGHTS) {
-    return null;
+    return (
+      <View style={[styles.card, styles.lockedCard]}>
+        <View style={styles.titleRow}>
+          <View style={styles.iconBadge}>
+            <Ionicons name="lock-closed-outline" size={13} color={colors.subtext} />
+          </View>
+          <Text style={styles.eyebrowMuted}>YAPAY ZEKA · KİLİTLİ</Text>
+        </View>
+        <Text style={styles.title}>Duygu Haritan</Text>
+        <Text style={styles.subtitle}>
+          {notes.length}/{MIN_NOTES_FOR_INSIGHTS} not — {MIN_NOTES_FOR_INSIGHTS - notes.length}{' '}
+          not daha yazınca notlarındaki örüntüleri analiz etmeye başlar.
+        </Text>
+        <View style={styles.lockedProgressTrack}>
+          <View
+            style={[
+              styles.lockedProgressFill,
+              { width: `${Math.min(100, (notes.length / MIN_NOTES_FOR_INSIGHTS) * 100)}%` },
+            ]}
+          />
+        </View>
+      </View>
+    );
   }
 
   const handleGenerate = async () => {
@@ -79,6 +101,11 @@ export default function PatternInsightsCard({ notes }: { notes: Note[] }) {
           </Text>
         )}
       </TouchableOpacity>
+      {loading && insights.length === 0 && (
+        <Text style={styles.coldStartHint}>
+          İlk oluşturmada sunucu uyanıyor olabilir, biraz sürebilir.
+        </Text>
+      )}
     </View>
   );
 }
@@ -112,6 +139,26 @@ function getStyles(colors: ThemeColors) {
       fontWeight: '700',
       color: colors.primary,
       letterSpacing: 1.1,
+    },
+    eyebrowMuted: {
+      fontSize: 10.5,
+      fontWeight: '700',
+      color: colors.subtext,
+      letterSpacing: 1.1,
+    },
+    lockedCard: {
+      opacity: 0.9,
+    },
+    lockedProgressTrack: {
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: colors.background,
+      overflow: 'hidden',
+    },
+    lockedProgressFill: {
+      height: '100%',
+      borderRadius: 3,
+      backgroundColor: colors.primary,
     },
     title: {
       fontSize: 19,
@@ -150,6 +197,12 @@ function getStyles(colors: ThemeColors) {
       fontSize: 13,
       color: colors.danger,
       marginBottom: 12,
+    },
+    coldStartHint: {
+      fontSize: 11,
+      color: colors.subtext,
+      textAlign: 'center',
+      marginTop: 8,
     },
     button: {
       backgroundColor: colors.primary,

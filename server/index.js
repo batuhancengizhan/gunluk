@@ -336,6 +336,89 @@ app.post('/insights', analyzeLimiter, async (req, res) => {
   }
 });
 
+const CHAT_SYSTEM_PROMPT = `Sen "Günlük Asistan" uygulamasının sohbet edilebilir yapay zeka
+asistanısın. Kullanıcının günlük notlarına erişimin var; bu sohbette ona kendi notları
+hakkında soru sorma, geçmişini hatırlama ve düşüncelerini toparlama imkanı veriyorsun.
+KESİN KURALLAR:
+- Yanıtların SADECE sana verilen günlük notlarına dayansın. Notlarda olmayan hiçbir olay,
+  isim veya detayı uydurma. Soru notlarla cevaplanamıyorsa bunu nazikçe belirt.
+- Yanıtların 2-5 cümle olsun, sohbet havasında, sıcak, meraklı ve destekleyici bir ton kullan.
+- Asla tıbbi teşhis koyma veya tedavi önerisi verme. Ciddi bir kriz/kendine zarar verme
+  belirtisi görürsen, nazikçe bir uzmana veya güvendiği birine danışmasını öner.
+- Notlardaki mahrem detayları gereksiz yere tekrar etme; sadece doğrudan soruyla ilgili
+  kısma değin.
+- Türkçe yanıt ver.`;
+
+const chatLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Çok fazla mesaj gönderildi, lütfen biraz sonra tekrar dene.' },
+});
+
+app.post('/chat', chatLimiter, async (req, res) => {
+  const { notes, messages } = req.body ?? {};
+
+  if (!Array.isArray(notes)) {
+    return res.status(400).json({ error: 'notes alanı bir dizi olmalı.' });
+  }
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'messages alanı boş olamaz.' });
+  }
+
+  if (messages.length > 40) {
+    return res.status(400).json({ error: 'Sohbet çok uzun oldu, lütfen yeni bir sohbet başlat.' });
+  }
+
+  const cleanMessages = messages
+    .filter(
+      (m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string'
+    )
+    .map((m) => ({ role: m.role, content: m.content.slice(0, 2000) }));
+
+  if (cleanMessages.length === 0 || cleanMessages[cleanMessages.length - 1].role !== 'user') {
+    return res.status(400).json({ error: 'Son mesaj kullanıcıdan gelmeli.' });
+  }
+
+  const notesText = notes
+    .slice(0, 200)
+    .map((note) => {
+      const date = note?.createdAt ? new Date(note.createdAt).toLocaleDateString('tr-TR') : '';
+      const moodTag = note?.mood ? ` (ruh hali: ${note.mood})` : '';
+      return `[${date}]${moodTag} ${note?.text ?? ''}`;
+    })
+    .join('\n\n');
+
+  const systemPrompt = `${CHAT_SYSTEM_PROMPT}\n\nKullanıcının günlük notları:\n\n${notesText || '(henüz not yok)'}`;
+
+  try {
+    const response = await client.messages.create({
+      model: MODEL,
+      max_tokens: 400,
+      system: systemPrompt,
+      messages: cleanMessages,
+    });
+
+    if (response.stop_reason === 'refusal') {
+      return res.status(422).json({ error: 'Bu isteğe yanıt veremiyorum.' });
+    }
+
+    const textBlock = response.content.find((block) => block.type === 'text');
+    return res.json({ reply: textBlock?.text ?? '' });
+  } catch (error) {
+    if (error instanceof Anthropic.RateLimitError) {
+      return res.status(429).json({ error: 'Çok fazla istek gönderildi, lütfen biraz sonra tekrar dene.' });
+    }
+    if (error instanceof Anthropic.APIError) {
+      return res.status(502).json({ error: `Yapay zeka servisinde hata: ${error.message}` });
+    }
+    console.error(error);
+    return res.status(500).json({ error: 'Beklenmeyen bir hata oluştu.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Günlük Asistan backend ${PORT} portunda çalışıyor.`);
 });

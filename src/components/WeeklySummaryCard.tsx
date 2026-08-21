@@ -145,6 +145,11 @@ export default function WeeklySummaryCard({ notes }: { notes: Note[] }) {
               </Text>
             )}
           </TouchableOpacity>
+          {loading && !summary && (
+            <Text style={styles.coldStartHint}>
+              İlk oluşturmada sunucu uyanıyor olabilir, biraz sürebilir.
+            </Text>
+          )}
         </>
       ) : (
         <Text style={styles.subtitle}>Son 7 günde not bulunmuyor.</Text>
@@ -249,6 +254,12 @@ function getStyles(colors: ThemeColors) {
       fontSize: 13,
       color: colors.danger,
       marginBottom: 12,
+    },
+    coldStartHint: {
+      fontSize: 11,
+      color: colors.subtext,
+      textAlign: 'center',
+      marginTop: 8,
     },
     button: {
       backgroundColor: colors.primary,

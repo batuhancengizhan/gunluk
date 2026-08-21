@@ -17,6 +17,7 @@ import {
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import WriteNoteScreen from './src/screens/WriteNoteScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
+import AssistantScreen from './src/screens/AssistantScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { BackgroundThemeProvider } from './src/context/BackgroundThemeContext';
@@ -69,6 +70,7 @@ function AppContent() {
             const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
               NotYaz: 'create-outline',
               Gecmis: 'time-outline',
+              Asistan: 'chatbubble-ellipses-outline',
               Ayarlar: 'settings-outline',
             };
             return (
@@ -88,6 +90,11 @@ function AppContent() {
           name="Gecmis"
           component={HistoryScreen}
           options={{ title: 'Geçmiş Notlar' }}
+        />
+        <Tab.Screen
+          name="Asistan"
+          component={AssistantScreen}
+          options={{ title: 'Asistan' }}
         />
         <Tab.Screen
           name="Ayarlar"
