@@ -20,6 +20,7 @@ import { haptics } from '../utils/haptics';
 import { useToast } from '../context/ToastContext';
 import PhotoAttachment from './PhotoAttachment';
 import VoiceNoteAttachment from './VoiceNoteAttachment';
+import ShareCardModal from './ShareCardModal';
 import { extractTags } from '../utils/tags';
 
 interface Props {
@@ -36,6 +37,7 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
   const [text, setText] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [audioUri, setAudioUri] = useState<string | null>(null);
+  const [shareCardNote, setShareCardNote] = useState<Note | null>(null);
 
   useEffect(() => {
     if (note) {
@@ -66,6 +68,12 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
     Share.share({ message: `${date}${moodTag}\n\n${text}` }).catch(() => {});
   };
 
+  const handleShareCard = () => {
+    if (!note) return;
+    haptics.selection();
+    setShareCardNote({ ...note, text });
+  };
+
   return (
     <Modal visible={!!note} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
@@ -76,14 +84,24 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
           <View style={styles.grabber} />
           <View style={styles.titleRow}>
             <Text style={styles.title}>Notu Düzenle</Text>
-            <TouchableOpacity
-              onPress={handleShare}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              accessibilityRole="button"
-              accessibilityLabel="Notu paylaş"
-            >
-              <Ionicons name="share-outline" size={20} color={colors.subtext} />
-            </TouchableOpacity>
+            <View style={styles.titleActions}>
+              <TouchableOpacity
+                onPress={handleShareCard}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Notu görsel olarak paylaş"
+              >
+                <Ionicons name="image-outline" size={20} color={colors.subtext} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleShare}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Notu metin olarak paylaş"
+              >
+                <Ionicons name="share-outline" size={20} color={colors.subtext} />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.photoRow}>
             <PhotoAttachment
@@ -127,6 +145,7 @@ export default function NoteEditModal({ note, onClose, onSave }: Props) {
           </View>
         </View>
       </KeyboardAvoidingView>
+      <ShareCardModal note={shareCardNote} onClose={() => setShareCardNote(null)} />
     </Modal>
   );
 }
@@ -160,6 +179,11 @@ function getStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'space-between',
       marginBottom: 14,
+    },
+    titleActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 16,
     },
     title: {
       fontSize: 19,
