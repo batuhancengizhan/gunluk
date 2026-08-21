@@ -1,14 +1,21 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 
+// Toast bilerek uygulamanın açık/koyu tema tercihinden bağımsız, her zaman
+// sabit koyu bir kapsül olarak render edilir (Material/Slack snackbar
+// deseni) — bu sayede açık temada tersine dönüp lime aksiyon metninin
+// neredeyse beyaz bir zeminde okunaksız kalması gibi bir kontrast sorunu
+// hiç oluşmaz.
+const TOAST_BG = '#1C1E21';
+const TOAST_TEXT = '#F7F7F8';
+const TOAST_ACCENT = '#D1FE17';
+
 export default function Toast() {
-  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { message, visible, action, hideToast } = useToast();
-  const styles = useMemo(() => getStyles(colors), [colors]);
+  const styles = useMemo(() => getStyles(), []);
   const translateY = useRef(new Animated.Value(-80)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -57,7 +64,7 @@ export default function Toast() {
   );
 }
 
-function getStyles(colors: ThemeColors) {
+function getStyles() {
   return StyleSheet.create({
     container: {
       position: 'absolute',
@@ -67,25 +74,25 @@ function getStyles(colors: ThemeColors) {
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 14,
-      backgroundColor: colors.text,
-      borderRadius: 14,
+      backgroundColor: TOAST_BG,
+      borderRadius: 12,
       paddingVertical: 13,
       paddingHorizontal: 18,
       zIndex: 2000,
       shadowColor: '#000',
-      shadowOpacity: 0.2,
+      shadowOpacity: 0.3,
       shadowRadius: 12,
       shadowOffset: { width: 0, height: 6 },
       elevation: 8,
     },
     text: {
       flex: 1,
-      color: colors.background,
+      color: TOAST_TEXT,
       fontSize: 14,
       fontWeight: '600',
     },
     actionText: {
-      color: colors.primary,
+      color: TOAST_ACCENT,
       fontSize: 14,
       fontWeight: '700',
     },

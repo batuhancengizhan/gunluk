@@ -6,7 +6,6 @@ import { Note } from '../types/Note';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { computeJournalOverview } from '../utils/journalOverview';
 import { moodLabel } from '../constants/moods';
-import { softShadow } from '../utils/shadow';
 import { FONT_DISPLAY_EXTRABOLD } from '../constants/fonts';
 
 interface Props {
@@ -174,13 +173,12 @@ function getStyles(colors: ThemeColors) {
     },
     heroCard: {
       backgroundColor: colors.card,
-      borderRadius: 20,
+      borderRadius: 16,
       paddingVertical: 26,
       alignItems: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
       marginBottom: 16,
-      ...softShadow(colors),
     },
     heroNumber: {
       fontSize: 44,
@@ -207,12 +205,11 @@ function getStyles(colors: ThemeColors) {
     miniTile: {
       flex: 1,
       backgroundColor: colors.card,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 14,
       alignItems: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     miniTileValue: {
       fontSize: 18,
@@ -241,11 +238,10 @@ function getStyles(colors: ThemeColors) {
     },
     card: {
       backgroundColor: colors.card,
-      borderRadius: 16,
+      borderRadius: 14,
       padding: 16,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     barRow: {
       flexDirection: 'row',
