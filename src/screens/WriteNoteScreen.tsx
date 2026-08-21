@@ -22,6 +22,7 @@ import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { useToast } from '../context/ToastContext';
 import { calculateStreak, getStreakMilestoneMessage } from '../utils/streak';
 import { calculateLongestStreak, getNoteCountMilestoneMessage } from '../utils/stats';
+import { calculateStreakWithFreezes, getFreezeCount, maybeAwardFreeze } from '../utils/streakFreeze';
 import { cardShadow } from '../utils/shadow';
 import {
   getCachedPrompts,
@@ -51,6 +52,7 @@ export default function WriteNoteScreen() {
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [streak, setStreak] = useState(0);
+  const [freezes, setFreezes] = useState(0);
   const [prompts, setPrompts] = useState<string[]>([]);
   const [greeting, setGreeting] = useState('');
   const [showBreathingSuggestion, setShowBreathingSuggestion] = useState(false);
@@ -63,7 +65,9 @@ export default function WriteNoteScreen() {
     useCallback(() => {
       getTodaysGreeting().then(setGreeting);
       getNotes().then(async (notes) => {
-        setStreak(calculateStreak(notes));
+        const freezeCount = await getFreezeCount();
+        setFreezes(freezeCount);
+        setStreak(calculateStreakWithFreezes(notes, freezeCount).streak);
         const cached = await getCachedPrompts();
         setPrompts(pickRandomPrompts(cached, 3));
         if (await shouldRefreshPrompts()) {
@@ -146,14 +150,24 @@ export default function WriteNoteScreen() {
       setShowCapsuleOptions(false);
       setShowBreathingSuggestion(false);
       const notes = await getNotes();
-      const newStreak = calculateStreak(notes);
+      const rawStreak = calculateStreak(notes);
+      const freezeAwarded = await maybeAwardFreeze(rawStreak);
+      const freezeCount = await getFreezeCount();
+      setFreezes(freezeCount);
+      const newStreak = calculateStreakWithFreezes(notes, freezeCount).streak;
       setStreak(newStreak);
       haptics.success();
 
       const isNewRecord = newStreak > previousLongestStreak && newStreak > 1;
-      const milestoneMessage = isNewRecord
+      let milestoneMessage = isNewRecord
         ? `Yeni rekorun: ${newStreak} gün üst üste yazdın.`
         : getStreakMilestoneMessage(newStreak) ?? getNoteCountMilestoneMessage(notes.length);
+
+      if (freezeAwarded) {
+        milestoneMessage = milestoneMessage
+          ? `${milestoneMessage} Bir de seri koruması kazandın.`
+          : 'Bir seri koruması kazandın — bir gün kaçırsan bile serin bozulmaz.';
+      }
 
       if (milestoneMessage) {
         showToast(milestoneMessage, { duration: 3600 });
@@ -190,6 +204,13 @@ export default function WriteNoteScreen() {
             <View style={styles.streakBadge}>
               <Ionicons name="flame" size={13} color={colors.primary} />
               <Text style={styles.streakText}>{streak}</Text>
+              {freezes > 0 && (
+                <>
+                  <View style={styles.streakDivider} />
+                  <Ionicons name="snow-outline" size={12} color={colors.subtext} />
+                  <Text style={styles.streakFreezeText}>{freezes}</Text>
+                </>
+              )}
             </View>
           )}
         </View>
@@ -429,6 +450,16 @@ function getStyles(colors: ThemeColors) {
       fontSize: 13,
       fontWeight: '700',
       color: colors.text,
+    },
+    streakDivider: {
+      width: 1,
+      height: 12,
+      backgroundColor: colors.border,
+    },
+    streakFreezeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.subtext,
     },
     greeting: {
       fontSize: 13,
