@@ -19,37 +19,38 @@ export interface ThemeColors {
   shadow: string;
 }
 
-// Zeytin yeşili + kiremit turuncusu harmanı: ana vurgu kiremit
-// turuncusu (butonlar, aktif durumlar), ikincil vurgu (favoriler) zeytin
-// yeşili — nötr gri yerine hafif sıcak, topraksı bir zemin tonu kullanılıyor.
+// Higgsfield.ai'nin gerçek tasarım tokenlarından türetilmiş, tek vurgu
+// renkli ("neon lime") koyu-öncelikli teknoloji paleti. Marka rengi
+// (#D1FE17) her iki modda da sabit kalır; sadece yüzey/metin tonları ve
+// favori ikonunun okunabilirliği moda göre ayarlanır.
 const lightColors: ThemeColors = {
-  background: '#FAF8F2',
+  background: '#F7F7F8',
   card: '#FFFFFF',
-  text: '#211C15',
-  subtext: '#7C7364',
-  border: '#EAE3D5',
-  primary: '#C1592E',
-  primaryText: '#FFFFFF',
-  danger: '#C0392B',
-  dangerBg: '#FBEAE5',
-  favorite: '#748034',
-  favoriteBg: '#EEF0DF',
-  shadow: 'rgba(33, 28, 21, 0.08)',
+  text: '#0F1113',
+  subtext: 'rgba(15, 17, 19, 0.6)',
+  border: 'rgba(15, 17, 19, 0.1)',
+  primary: '#D1FE17',
+  primaryText: '#0F1113',
+  danger: '#D94438',
+  dangerBg: 'rgba(217, 68, 56, 0.08)',
+  favorite: '#7A8A00',
+  favoriteBg: 'rgba(209, 254, 23, 0.22)',
+  shadow: 'rgba(15, 17, 19, 0.08)',
 };
 
 const darkColors: ThemeColors = {
-  background: '#151209',
-  card: '#221D14',
-  text: '#F6F1E7',
-  subtext: '#AB9F8B',
-  border: '#352E20',
-  primary: '#E08B5B',
-  primaryText: '#1A140D',
-  danger: '#E0705F',
-  dangerBg: '#2E1712',
-  favorite: '#B7C36A',
-  favoriteBg: '#262916',
-  shadow: 'rgba(0, 0, 0, 0.5)',
+  background: '#0F1113',
+  card: '#1C1E21',
+  text: '#F7F7F8',
+  subtext: 'rgba(247, 247, 248, 0.6)',
+  border: 'rgba(255, 255, 255, 0.1)',
+  primary: '#D1FE17',
+  primaryText: '#0F1113',
+  danger: '#FF6B60',
+  dangerBg: 'rgba(255, 107, 96, 0.14)',
+  favorite: '#D1FE17',
+  favoriteBg: 'rgba(209, 254, 23, 0.14)',
+  shadow: 'rgba(0, 0, 0, 0.6)',
 };
 
 interface ThemeContextValue {

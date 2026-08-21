@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop, Text as SvgText, TSpan } from 'react-native-svg';
+import Svg, { Defs, RadialGradient, Rect, Stop, Text as SvgText, TSpan } from 'react-native-svg';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Note } from '../types/Note';
@@ -10,7 +10,17 @@ import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { wrapText } from '../utils/wrapText';
 import { haptics } from '../utils/haptics';
 import { useToast } from '../context/ToastContext';
-import { FONT_DISPLAY_BOLD } from '../constants/fonts';
+import { FONT_DISPLAY_BOLD, FONT_DISPLAY_SEMIBOLD } from '../constants/fonts';
+
+// Paylaşılan görsel her zaman markanın koyu/lime kimliğinde render edilir —
+// kullanıcının uygulama içi açık/koyu tema tercihinden bağımsız, tıpkı
+// Spotify Wrapped gibi tutarlı bir "marka kartı".
+const CARD_BG = '#0F1113';
+const CARD_SURFACE = '#1C1E21';
+const CARD_BORDER = 'rgba(255, 255, 255, 0.1)';
+const CARD_ACCENT = '#D1FE17';
+const CARD_TEXT = '#F7F7F8';
+const CARD_MUTED = 'rgba(247, 247, 248, 0.55)';
 
 const CARD_WIDTH = 360;
 const CARD_HEIGHT = 450;
@@ -18,7 +28,7 @@ const EXPORT_SCALE = 3;
 const MAX_CHARS_PER_LINE = 30;
 const MAX_LINES = 8;
 const LINE_HEIGHT = 24;
-const TEXT_START_Y = 190;
+const TEXT_START_Y = 192;
 
 interface Props {
   note: Note | null;
@@ -92,30 +102,47 @@ export default function ShareCardModal({ note, onClose }: Props) {
         <View style={styles.previewWrap}>
           <Svg ref={svgRef} width={CARD_WIDTH} height={CARD_HEIGHT} viewBox={`0 0 ${CARD_WIDTH} ${CARD_HEIGHT}`}>
             <Defs>
-              <LinearGradient id="shareCardBg" x1="0" y1="0" x2="1" y2="1">
-                <Stop offset="0" stopColor="#C1592E" />
-                <Stop offset="1" stopColor="#748034" />
-              </LinearGradient>
+              <RadialGradient id="shareCardGlow" cx="88%" cy="6%" r="55%">
+                <Stop offset="0" stopColor={CARD_ACCENT} stopOpacity={0.22} />
+                <Stop offset="1" stopColor={CARD_ACCENT} stopOpacity={0} />
+              </RadialGradient>
             </Defs>
-            <Rect x="0" y="0" width={CARD_WIDTH} height={CARD_HEIGHT} fill="url(#shareCardBg)" />
-            <SvgText x="28" y="46" fontSize="15" fontWeight="700" fill="#FFFFFF" opacity={0.9}>
-              🌿 Günlük Asistan
+            <Rect x="0" y="0" width={CARD_WIDTH} height={CARD_HEIGHT} fill={CARD_BG} />
+            <Rect x="0" y="0" width={CARD_WIDTH} height={CARD_HEIGHT} fill="url(#shareCardGlow)" />
+            <SvgText
+              x="28"
+              y="44"
+              fontSize="12"
+              fontFamily={FONT_DISPLAY_BOLD}
+              fill={CARD_ACCENT}
+              letterSpacing="1.5"
+            >
+              GÜNLÜK ASİSTAN
             </SvgText>
             {note.mood && (
               <SvgText x={CARD_WIDTH - 28} y="52" fontSize="26" textAnchor="end">
                 {note.mood}
               </SvgText>
             )}
-            <SvgText x="28" y="92" fontSize="13" fill="#FFFFFF" opacity={0.78}>
+            <SvgText x="28" y="92" fontSize="13" fill={CARD_MUTED}>
               {dateLabel}
             </SvgText>
-            <Rect x="20" y="120" width={CARD_WIDTH - 40} height={260} rx="18" fill="#FFFFFF" opacity={0.97} />
+            <Rect
+              x="20"
+              y="120"
+              width={CARD_WIDTH - 40}
+              height={260}
+              rx="16"
+              fill={CARD_SURFACE}
+              stroke={CARD_BORDER}
+              strokeWidth="1"
+            />
             <SvgText
               x="40"
               y={TEXT_START_Y}
               fontSize="16.5"
-              fill="#211C15"
-              fontWeight="500"
+              fill={CARD_TEXT}
+              fontFamily={FONT_DISPLAY_SEMIBOLD}
             >
               {lines.map((line, i) => (
                 <TSpan key={i} x="40" dy={i === 0 ? 0 : LINE_HEIGHT}>
@@ -126,12 +153,12 @@ export default function ShareCardModal({ note, onClose }: Props) {
             <SvgText
               x={CARD_WIDTH / 2}
               y={CARD_HEIGHT - 20}
-              fontSize="11"
-              fill="#FFFFFF"
-              opacity={0.75}
+              fontSize="10.5"
+              fill={CARD_MUTED}
               textAnchor="middle"
+              letterSpacing="0.5"
             >
-              Günlük Asistan ile yazıldı
+              GUNLUKASISTAN.APP
             </SvgText>
           </Svg>
         </View>
@@ -187,7 +214,7 @@ function getStyles(colors: ThemeColors) {
       justifyContent: 'center',
       gap: 8,
       backgroundColor: colors.primary,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 15,
       marginTop: 16,
     },

@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { pickPhotoFromLibrary, takePhotoWithCamera } from '../utils/photoStorage';
 import { haptics } from '../utils/haptics';
-import { softShadow } from '../utils/shadow';
 
 interface Props {
   photoUri: string | null;
@@ -58,7 +57,7 @@ export default function PhotoAttachment({ photoUri, onChange, onError }: Props) 
           accessibilityRole="button"
           accessibilityLabel="Fotoğrafı kaldır"
         >
-          <Ionicons name="close" size={16} color="#FFFFFF" />
+          <Ionicons name="close" size={13} color={colors.background} />
         </TouchableOpacity>
       </View>
     );
@@ -69,17 +68,14 @@ export default function PhotoAttachment({ photoUri, onChange, onError }: Props) 
       style={styles.addButton}
       onPress={handlePress}
       disabled={loading}
-      activeOpacity={0.85}
+      activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel="Fotoğraf ekle"
     >
       {loading ? (
         <ActivityIndicator size="small" color={colors.subtext} />
       ) : (
-        <>
-          <Ionicons name="camera-outline" size={16} color={colors.subtext} />
-          <Text style={styles.addButtonText}>Fotoğraf Ekle</Text>
-        </>
+        <Ionicons name="camera-outline" size={18} color={colors.subtext} />
       )}
     </TouchableOpacity>
   );
@@ -88,42 +84,31 @@ export default function PhotoAttachment({ photoUri, onChange, onError }: Props) 
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     addButton: {
-      flexDirection: 'row',
+      width: 34,
+      height: 34,
+      borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      alignSelf: 'flex-start',
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      paddingVertical: 9,
-      paddingHorizontal: 14,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      ...softShadow(colors),
-    },
-    addButtonText: {
-      fontSize: 12.5,
-      fontWeight: '600',
-      color: colors.subtext,
+      backgroundColor: colors.background,
     },
     previewWrap: {
       alignSelf: 'flex-start',
       position: 'relative',
     },
     previewImage: {
-      width: 96,
-      height: 96,
-      borderRadius: 14,
-      backgroundColor: colors.card,
+      width: 44,
+      height: 44,
+      borderRadius: 10,
+      backgroundColor: colors.background,
     },
     removeButton: {
       position: 'absolute',
       top: -6,
       right: -6,
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      backgroundColor: 'rgba(0,0,0,0.55)',
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: colors.text,
       alignItems: 'center',
       justifyContent: 'center',
     },

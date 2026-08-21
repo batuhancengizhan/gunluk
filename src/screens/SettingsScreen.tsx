@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator, Alert, Platform, ScrollView, Share, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { clearAllNotes, getNotes, mergeNotesFromBackup } from '../storage/notesStorage';
 import { formatNotesForExport } from '../utils/exportNotes';
@@ -11,7 +10,6 @@ import { Note } from '../types/Note';
 import { ThemeColors, ThemeMode, useTheme } from '../context/ThemeContext';
 import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { BACKGROUND_THEMES } from '../constants/backgroundThemes';
-import { cardShadow, softShadow } from '../utils/shadow';
 import {
   disableDailyReminder,
   enableDailyReminder,
@@ -314,9 +312,12 @@ export default function SettingsScreen() {
                   accessibilityLabel={`${bg.label} arka planı`}
                   accessibilityState={{ selected: active }}
                 >
-                  <LinearGradient
-                    colors={bg.colors}
-                    style={[styles.swatch, active && styles.swatchActive]}
+                  <View
+                    style={[
+                      styles.swatch,
+                      { backgroundColor: bg.glow ?? colors.card },
+                      active && styles.swatchActive,
+                    ]}
                   />
                   <Text style={[styles.swatchLabel, active && styles.swatchLabelActive]}>
                     {bg.label}
@@ -578,17 +579,16 @@ function getStyles(colors: ThemeColors) {
     themeRow: {
       flexDirection: 'row',
       backgroundColor: colors.card,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 4,
       gap: 4,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     themeOption: {
       flex: 1,
       paddingVertical: 11,
-      borderRadius: 11,
+      borderRadius: 9,
       alignItems: 'center',
     },
     themeOptionActive: {
@@ -612,12 +612,11 @@ function getStyles(colors: ThemeColors) {
       width: 64,
     },
     swatch: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
+      width: 44,
+      height: 44,
+      borderRadius: 13,
       borderWidth: 2,
       borderColor: 'transparent',
-      ...softShadow(colors),
     },
     swatchActive: {
       borderColor: colors.primary,
@@ -634,11 +633,10 @@ function getStyles(colors: ThemeColors) {
     },
     infoCard: {
       backgroundColor: colors.card,
-      borderRadius: 14,
+      borderRadius: 12,
       padding: 16,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     appName: {
       fontSize: 15,
@@ -734,12 +732,11 @@ function getStyles(colors: ThemeColors) {
     },
     exportButton: {
       backgroundColor: colors.card,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 15,
       alignItems: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     exportButtonText: {
       color: colors.text,
@@ -751,10 +748,9 @@ function getStyles(colors: ThemeColors) {
     },
     dangerButton: {
       backgroundColor: colors.dangerBg,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 15,
       alignItems: 'center',
-      ...softShadow(colors),
     },
     dangerButtonText: {
       color: colors.danger,

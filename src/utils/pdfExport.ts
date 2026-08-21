@@ -42,13 +42,13 @@ function buildHtml(notes: Note[]): string {
   <head>
     <meta charset="utf-8" />
     <style>
-      body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #211C15; padding: 48px; }
-      h1 { color: #C1592E; font-size: 28px; margin: 0 0 4px; }
-      .subtitle { color: #7C7364; font-size: 13px; margin-bottom: 36px; }
-      .entry { margin-bottom: 26px; padding-bottom: 18px; border-bottom: 1px solid #EAE3D5; page-break-inside: avoid; }
+      body { font-family: -apple-system, Helvetica, Arial, sans-serif; color: #0F1113; padding: 48px; }
+      h1 { color: #0F1113; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin: 0 0 4px; }
+      .subtitle { color: rgba(15,17,19,0.55); font-size: 13px; margin-bottom: 36px; }
+      .entry { margin-bottom: 26px; padding-bottom: 18px; border-bottom: 1px solid rgba(15,17,19,0.1); page-break-inside: avoid; }
       .entry-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
-      .entry-date { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #7C7364; }
-      .entry-mood { font-size: 13px; color: #C1592E; font-weight: 600; }
+      .entry-date { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(15,17,19,0.55); }
+      .entry-mood { font-size: 13px; color: #7A8A00; font-weight: 600; }
       .entry-text { font-size: 14px; line-height: 1.6; white-space: pre-wrap; margin: 0; }
     </style>
   </head>

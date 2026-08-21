@@ -13,7 +13,7 @@ const BackgroundThemeContext = createContext<BackgroundThemeContextValue | undef
 const BACKGROUND_THEME_KEY = '@gunluk_asistan/background_theme';
 
 export function BackgroundThemeProvider({ children }: { children: React.ReactNode }) {
-  const [backgroundThemeId, setBackgroundThemeIdState] = useState('sunrise');
+  const [backgroundThemeId, setBackgroundThemeIdState] = useState('none');
 
   useEffect(() => {
     AsyncStorage.getItem(BACKGROUND_THEME_KEY).then((stored) => {

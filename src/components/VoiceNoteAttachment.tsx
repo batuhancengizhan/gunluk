@@ -10,7 +10,6 @@ import {
 } from 'expo-audio';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { haptics } from '../utils/haptics';
-import { softShadow } from '../utils/shadow';
 import { deleteStoredAudio, saveAudioToAppStorage } from '../utils/audioStorage';
 import AudioPlaybackButton from './AudioPlaybackButton';
 
@@ -113,12 +112,11 @@ export default function VoiceNoteAttachment({ audioUri, onChange, onError }: Pro
       style={styles.addButton}
       onPress={handleStart}
       disabled={busy}
-      activeOpacity={0.85}
+      activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel="Sesli not ekle"
     >
-      <Ionicons name="mic-outline" size={16} color={colors.subtext} />
-      <Text style={styles.addButtonText}>Sesli Not Ekle</Text>
+      <Ionicons name="mic-outline" size={18} color={colors.subtext} />
     </TouchableOpacity>
   );
 }
@@ -126,33 +124,22 @@ export default function VoiceNoteAttachment({ audioUri, onChange, onError }: Pro
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     addButton: {
-      flexDirection: 'row',
+      width: 34,
+      height: 34,
+      borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      alignSelf: 'flex-start',
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      paddingVertical: 9,
-      paddingHorizontal: 14,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      ...softShadow(colors),
-    },
-    addButtonText: {
-      fontSize: 12.5,
-      fontWeight: '600',
-      color: colors.subtext,
+      backgroundColor: colors.background,
     },
     recordingButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 7,
       alignSelf: 'flex-start',
       backgroundColor: colors.dangerBg,
-      borderRadius: 12,
-      paddingVertical: 9,
-      paddingHorizontal: 14,
+      borderRadius: 10,
+      paddingVertical: 7,
+      paddingHorizontal: 11,
     },
     recordingDot: {
       width: 8,

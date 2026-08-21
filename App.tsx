@@ -10,10 +10,10 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
-  Fraunces_600SemiBold,
-  Fraunces_700Bold,
-  Fraunces_800ExtraBold,
-} from '@expo-google-fonts/fraunces';
+  SpaceGrotesk_500Medium,
+  SpaceGrotesk_600SemiBold,
+  SpaceGrotesk_700Bold,
+} from '@expo-google-fonts/space-grotesk';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import WriteNoteScreen from './src/screens/WriteNoteScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
@@ -106,9 +106,9 @@ function AppContent() {
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts({
-    Fraunces_600SemiBold,
-    Fraunces_700Bold,
-    Fraunces_800ExtraBold,
+    SpaceGrotesk_500Medium,
+    SpaceGrotesk_600SemiBold,
+    SpaceGrotesk_700Bold,
   });
 
   const onLayoutRootView = useCallback(async () => {

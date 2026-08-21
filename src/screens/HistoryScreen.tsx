@@ -23,7 +23,7 @@ import NoteEditModal from '../components/NoteEditModal';
 import AudioPlaybackButton from '../components/AudioPlaybackButton';
 import { ThemeColors, useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { cardShadow, softShadow } from '../utils/shadow';
+import { cardShadow } from '../utils/shadow';
 import { haptics } from '../utils/haptics';
 import { moodLabel } from '../constants/moods';
 import {
@@ -401,12 +401,11 @@ function getStyles(colors: ThemeColors) {
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.card,
-      borderRadius: 12,
+      borderRadius: 11,
       paddingHorizontal: 14,
       gap: 8,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     searchInput: {
       flex: 1,
@@ -417,13 +416,12 @@ function getStyles(colors: ThemeColors) {
     iconToggle: {
       width: 42,
       height: 42,
-      borderRadius: 12,
+      borderRadius: 11,
       backgroundColor: colors.card,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     favoriteToggleActive: {
       backgroundColor: colors.favorite,
@@ -437,21 +435,21 @@ function getStyles(colors: ThemeColors) {
       paddingRight: 8,
     },
     moodChip: {
-      width: 38,
-      height: 38,
-      borderRadius: 19,
+      width: 34,
+      height: 34,
+      borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: colors.card,
-      borderWidth: 2,
-      borderColor: 'transparent',
-      ...softShadow(colors),
+      borderWidth: 1,
+      borderColor: colors.border,
     },
     moodChipActive: {
+      backgroundColor: colors.favoriteBg,
       borderColor: colors.primary,
     },
     moodChipEmoji: {
-      fontSize: 17,
+      fontSize: 16,
     },
     tagFilterScroll: {
       marginBottom: 12,
@@ -462,12 +460,11 @@ function getStyles(colors: ThemeColors) {
     },
     tagFilterChip: {
       backgroundColor: colors.card,
-      borderRadius: 14,
+      borderRadius: 10,
       paddingHorizontal: 12,
       paddingVertical: 7,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     tagFilterChipActive: {
       backgroundColor: colors.primary,
@@ -489,10 +486,10 @@ function getStyles(colors: ThemeColors) {
     },
     card: {
       backgroundColor: colors.card,
-      borderRadius: 16,
+      borderRadius: 14,
       padding: 16,
-      marginBottom: 12,
-      borderWidth: StyleSheet.hairlineWidth,
+      marginBottom: 10,
+      borderWidth: 1,
       borderColor: colors.border,
       ...cardShadow(colors),
     },

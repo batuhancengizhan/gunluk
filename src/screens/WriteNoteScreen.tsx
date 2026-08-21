@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { addNote, getNotes } from '../storage/notesStorage';
-import BackgroundArt, { hasBackgroundArt } from '../components/BackgroundArt';
+import BackgroundArt from '../components/BackgroundArt';
 import BreathingExercise from '../components/BreathingExercise';
 import PhotoAttachment from '../components/PhotoAttachment';
 import VoiceNoteAttachment from '../components/VoiceNoteAttachment';
@@ -21,7 +21,7 @@ import { useBackgroundTheme } from '../context/BackgroundThemeContext';
 import { useToast } from '../context/ToastContext';
 import { calculateStreak, getStreakMilestoneMessage } from '../utils/streak';
 import { calculateLongestStreak, getNoteCountMilestoneMessage } from '../utils/stats';
-import { cardShadow, softShadow } from '../utils/shadow';
+import { cardShadow } from '../utils/shadow';
 import {
   getCachedPrompts,
   pickRandomPrompts,
@@ -131,7 +131,7 @@ export default function WriteNoteScreen() {
         const granted = await requestNotificationPermission();
         if (granted) {
           await scheduleTimeCapsuleNotification(createdNote);
-          capsuleMessage = `Bu not ${capsuleOption?.label.toLowerCase()} karşına çıkacak 📮`;
+          capsuleMessage = `Bu not ${capsuleOption?.label.toLowerCase()} karşına çıkacak.`;
         }
       }
 
@@ -149,7 +149,7 @@ export default function WriteNoteScreen() {
 
       const isNewRecord = newStreak > previousLongestStreak && newStreak > 1;
       const milestoneMessage = isNewRecord
-        ? `Yeni rekorun! ${newStreak} gün üst üste yazdın 🏅`
+        ? `Yeni rekorun: ${newStreak} gün üst üste yazdın.`
         : getStreakMilestoneMessage(newStreak) ?? getNoteCountMilestoneMessage(notes.length);
 
       if (milestoneMessage) {
@@ -164,15 +164,19 @@ export default function WriteNoteScreen() {
     }
   };
 
-  const hasArt = hasBackgroundArt(backgroundTheme.id);
+  const handleCapsuleTogglePress = () => {
+    haptics.selection();
+    if (capsuleOptionId) {
+      setCapsuleOptionId(null);
+      setShowCapsuleOptions(false);
+    } else {
+      setShowCapsuleOptions((prev) => !prev);
+    }
+  };
 
   return (
     <View style={styles.gradientContainer}>
-      {hasArt && <BackgroundArt themeId={backgroundTheme.id} style={StyleSheet.absoluteFill} />}
-      <LinearGradient
-        colors={backgroundTheme.colors}
-        style={[StyleSheet.absoluteFill, hasArt && styles.gradientOverlay]}
-      />
+      <BackgroundArt themeId={backgroundTheme.id} style={StyleSheet.absoluteFill} />
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -181,118 +185,12 @@ export default function WriteNoteScreen() {
           <Text style={styles.title}>Bugün nasıl hissediyorsun?</Text>
           {streak > 0 && (
             <View style={styles.streakBadge}>
-              <Text style={styles.streakText}>🔥 {streak}</Text>
+              <Ionicons name="flame" size={13} color={colors.primary} />
+              <Text style={styles.streakText}>{streak}</Text>
             </View>
           )}
         </View>
         {greeting.length > 0 && <Text style={styles.greeting}>{greeting}</Text>}
-
-        <View style={styles.moodRow}>
-          {MOODS.map((emoji) => (
-            <TouchableOpacity
-              key={emoji}
-              style={[styles.moodButton, mood === emoji && styles.moodButtonActive]}
-              onPress={() => handleMoodPress(emoji)}
-              accessibilityRole="button"
-              accessibilityLabel={`${moodLabel(emoji)} ruh hali`}
-              accessibilityState={{ selected: mood === emoji }}
-            >
-              <Text style={styles.moodEmoji}>{emoji}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.photoRow}>
-          <PhotoAttachment
-            photoUri={photoUri}
-            onChange={setPhotoUri}
-            onError={(message) => showToast(message)}
-          />
-        </View>
-
-        <View style={styles.photoRow}>
-          <VoiceNoteAttachment
-            audioUri={audioUri}
-            onChange={setAudioUri}
-            onError={(message) => showToast(message)}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={styles.capsuleToggle}
-          onPress={() => {
-            haptics.selection();
-            if (capsuleOptionId) {
-              setCapsuleOptionId(null);
-              setShowCapsuleOptions(false);
-            } else {
-              setShowCapsuleOptions((prev) => !prev);
-            }
-          }}
-          activeOpacity={0.85}
-          accessibilityRole="button"
-          accessibilityLabel="Geleceğe mektup"
-          accessibilityState={{ selected: !!capsuleOptionId }}
-        >
-          <Ionicons
-            name={capsuleOptionId ? 'mail-open-outline' : 'mail-outline'}
-            size={14}
-            color={capsuleOptionId ? colors.primary : colors.subtext}
-          />
-          <Text style={[styles.capsuleToggleText, capsuleOptionId && styles.capsuleToggleTextActive]}>
-            {capsuleOptionId
-              ? `Geleceğe mektup: ${TIME_CAPSULE_OPTIONS.find((o) => o.id === capsuleOptionId)?.label}`
-              : 'Bunu gelecekte bana hatırlat'}
-          </Text>
-        </TouchableOpacity>
-
-        {showCapsuleOptions && !capsuleOptionId && (
-          <View style={styles.capsuleOptionsRow}>
-            {TIME_CAPSULE_OPTIONS.map((option) => (
-              <TouchableOpacity
-                key={option.id}
-                style={styles.capsuleOptionChip}
-                onPress={() => {
-                  haptics.selection();
-                  setCapsuleOptionId(option.id);
-                  setShowCapsuleOptions(false);
-                }}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.capsuleOptionChipText}>{option.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {showBreathingSuggestion && (
-          <View style={styles.breathingSuggestion}>
-            <View style={styles.breathingSuggestionText}>
-              <Text style={styles.breathingSuggestionTitle}>Kısa bir nefes molası ister misin?</Text>
-              <Text style={styles.breathingSuggestionSubtitle}>1 dakikalık kutu nefesi zihnini sakinleştirebilir.</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.breathingSuggestionButton}
-              onPress={() => {
-                haptics.selection();
-                setBreathingVisible(true);
-              }}
-              activeOpacity={0.85}
-              accessibilityRole="button"
-              accessibilityLabel="Nefes egzersizini başlat"
-            >
-              <Text style={styles.breathingSuggestionButtonText}>Başla</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setShowBreathingSuggestion(false)}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              accessibilityRole="button"
-              accessibilityLabel="Öneriyi kapat"
-            >
-              <Text style={styles.breathingSuggestionDismiss}>✕</Text>
-            </TouchableOpacity>
-          </View>
-        )}
 
         {text.length === 0 && (prompts.length > 0 || ENTRY_TEMPLATES.length > 0) && (
           <ScrollView
@@ -306,7 +204,7 @@ export default function WriteNoteScreen() {
                 key={template.id}
                 style={styles.templateChip}
                 onPress={() => handleTemplatePress(template)}
-                activeOpacity={0.85}
+                activeOpacity={0.7}
                 accessibilityRole="button"
                 accessibilityLabel={`${template.label} şablonuyla yaz`}
               >
@@ -319,7 +217,7 @@ export default function WriteNoteScreen() {
                 key={prompt}
                 style={styles.promptChip}
                 onPress={() => handlePromptPress(prompt)}
-                activeOpacity={0.85}
+                activeOpacity={0.7}
               >
                 <Text style={styles.promptChipText}>{prompt}</Text>
               </TouchableOpacity>
@@ -327,36 +225,165 @@ export default function WriteNoteScreen() {
           </ScrollView>
         )}
 
-        <TextInput
-          ref={inputRef}
-          style={styles.input}
-          multiline
-          placeholder="Günlük notunu buraya yaz... (#etiket ekleyebilirsin)"
-          placeholderTextColor={colors.subtext}
-          value={text}
-          onChangeText={setText}
-          textAlignVertical="top"
-        />
-        {liveTags.length > 0 && (
-          <View style={styles.liveTagRow}>
-            {liveTags.map((tag) => (
-              <View key={tag} style={styles.liveTagChip}>
-                <Text style={styles.liveTagChipText}>#{tag}</Text>
-              </View>
+        <View style={styles.composerCard}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.moodScroll}
+            contentContainerStyle={styles.moodRow}
+          >
+            {MOODS.map((emoji) => (
+              <TouchableOpacity
+                key={emoji}
+                style={[styles.moodButton, mood === emoji && styles.moodButtonActive]}
+                onPress={() => handleMoodPress(emoji)}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={`${moodLabel(emoji)} ruh hali`}
+                accessibilityState={{ selected: mood === emoji }}
+              >
+                <Text style={styles.moodEmoji}>{emoji}</Text>
+              </TouchableOpacity>
             ))}
+          </ScrollView>
+
+          <TextInput
+            ref={inputRef}
+            style={styles.composerInput}
+            multiline
+            placeholder="Günlük notunu buraya yaz... (#etiket ekleyebilirsin)"
+            placeholderTextColor={colors.subtext}
+            value={text}
+            onChangeText={setText}
+            textAlignVertical="top"
+          />
+
+          {liveTags.length > 0 && (
+            <View style={styles.liveTagRow}>
+              {liveTags.map((tag) => (
+                <View key={tag} style={styles.liveTagChip}>
+                  <Text style={styles.liveTagChipText}>#{tag}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {capsuleOptionId && (
+            <View style={styles.capsuleActiveChip}>
+              <Ionicons name="mail-open-outline" size={12} color={colors.primary} />
+              <Text style={styles.capsuleActiveChipText}>
+                {TIME_CAPSULE_OPTIONS.find((o) => o.id === capsuleOptionId)?.label} sonra hatırlat
+              </Text>
+              <TouchableOpacity
+                onPress={handleCapsuleTogglePress}
+                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                accessibilityRole="button"
+                accessibilityLabel="Hatırlatıcıyı kaldır"
+              >
+                <Ionicons name="close" size={12} color={colors.primary} />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {showCapsuleOptions && !capsuleOptionId && (
+            <View style={styles.capsuleOptionsRow}>
+              {TIME_CAPSULE_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.id}
+                  style={styles.capsuleOptionChip}
+                  onPress={() => {
+                    haptics.selection();
+                    setCapsuleOptionId(option.id);
+                    setShowCapsuleOptions(false);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.capsuleOptionChipText}>{option.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {showBreathingSuggestion && (
+            <View style={styles.breathingSuggestion}>
+              <View style={styles.breathingSuggestionText}>
+                <Text style={styles.breathingSuggestionTitle}>Kısa bir nefes molası ister misin?</Text>
+                <Text style={styles.breathingSuggestionSubtitle}>1 dakikalık kutu nefesi zihnini sakinleştirebilir.</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.breathingSuggestionButton}
+                onPress={() => {
+                  haptics.selection();
+                  setBreathingVisible(true);
+                }}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel="Nefes egzersizini başlat"
+              >
+                <Text style={styles.breathingSuggestionButtonText}>Başla</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowBreathingSuggestion(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="Öneriyi kapat"
+              >
+                <Ionicons name="close" size={14} color={colors.subtext} />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={styles.composerToolbar}>
+            <View style={styles.toolbarLeft}>
+              <PhotoAttachment
+                photoUri={photoUri}
+                onChange={setPhotoUri}
+                onError={(message) => showToast(message)}
+              />
+              <VoiceNoteAttachment
+                audioUri={audioUri}
+                onChange={setAudioUri}
+                onError={(message) => showToast(message)}
+              />
+              {!capsuleOptionId && (
+                <TouchableOpacity
+                  style={styles.toolbarIconButton}
+                  onPress={handleCapsuleTogglePress}
+                  activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="Gelecekte bana hatırlat"
+                  accessibilityState={{ selected: showCapsuleOptions }}
+                >
+                  <Ionicons
+                    name="mail-outline"
+                    size={18}
+                    color={showCapsuleOptions ? colors.primary : colors.subtext}
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+            <View style={styles.toolbarRight}>
+              {text.length > 0 && <Text style={styles.wordCount}>{wordCount}</Text>}
+              <TouchableOpacity
+                style={[
+                  styles.sendButton,
+                  !text.trim() && !saving && styles.sendButtonIdle,
+                ]}
+                onPress={handleSave}
+                disabled={saving}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Notu kaydet"
+              >
+                {saving ? (
+                  <ActivityIndicator size="small" color={colors.primaryText} />
+                ) : (
+                  <Ionicons name="arrow-up" size={18} color={colors.primaryText} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        )}
-        {text.length > 0 && (
-          <Text style={styles.wordCount}>{wordCount} kelime</Text>
-        )}
-        <TouchableOpacity
-          style={[styles.button, saving && styles.buttonDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.buttonText}>{saving ? 'Kaydediliyor...' : 'Kaydet'}</Text>
-        </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
       <BreathingExercise visible={breathingVisible} onClose={() => setBreathingVisible(false)} />
     </View>
@@ -367,9 +394,6 @@ function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     gradientContainer: {
       flex: 1,
-    },
-    gradientOverlay: {
-      opacity: 0.55,
     },
     container: {
       flex: 1,
@@ -383,19 +407,20 @@ function getStyles(colors: ThemeColors) {
       marginTop: 8,
     },
     title: {
-      fontSize: 24,
+      fontSize: 23,
       fontFamily: FONT_DISPLAY_SEMIBOLD,
+      letterSpacing: -0.6,
       color: colors.text,
       flexShrink: 1,
     },
     streakBadge: {
-      backgroundColor: colors.card,
-      borderRadius: 20,
-      paddingHorizontal: 13,
-      paddingVertical: 7,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      ...softShadow(colors),
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: colors.favoriteBg,
+      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
     },
     streakText: {
       fontSize: 13,
@@ -408,62 +433,135 @@ function getStyles(colors: ThemeColors) {
       marginBottom: 16,
       lineHeight: 18,
     },
-    moodRow: {
+    promptScroll: {
+      marginBottom: 12,
+    },
+    promptRow: {
+      gap: 8,
+      paddingRight: 8,
+    },
+    templateChip: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 9,
-      marginBottom: 18,
+      alignItems: 'center',
+      gap: 5,
+      backgroundColor: colors.favoriteBg,
+      borderRadius: 10,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+    },
+    templateChipText: {
+      fontSize: 12.5,
+      color: colors.primary,
+      fontWeight: '700',
+    },
+    promptChip: {
+      backgroundColor: colors.card,
+      borderRadius: 10,
+      paddingHorizontal: 13,
+      paddingVertical: 8,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: colors.border,
+      maxWidth: 220,
+    },
+    promptChipText: {
+      fontSize: 12.5,
+      color: colors.text,
+      fontWeight: '500',
+    },
+
+    // Birleşik "compose" kartı: mood seçici, metin alanı, ekler ve gönder
+    // butonu tek bir yüzeyde toplanır — ayrı ayrı kutucuklar yerine tek bir
+    // modern kompozisyon alanı (chat/AI araçlarındaki yazma çubuğu gibi).
+    composerCard: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: 14,
+      ...cardShadow(colors),
+    },
+    moodScroll: {
+      marginBottom: 10,
+    },
+    moodRow: {
+      gap: 8,
+      paddingRight: 4,
     },
     moodButton: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
+      width: 40,
+      height: 40,
+      borderRadius: 11,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.card,
-      borderWidth: 2,
+      backgroundColor: colors.background,
+      borderWidth: 1,
       borderColor: 'transparent',
-      ...softShadow(colors),
     },
     moodButtonActive: {
+      backgroundColor: colors.favoriteBg,
       borderColor: colors.primary,
     },
     moodEmoji: {
-      fontSize: 21,
+      fontSize: 18,
     },
-    photoRow: {
-      marginBottom: 14,
+    composerInput: {
+      flex: 1,
+      minHeight: 120,
+      fontSize: 16,
+      lineHeight: 23,
+      color: colors.text,
+      paddingVertical: 6,
     },
-    capsuleToggle: {
+    liveTagRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 4,
+      marginBottom: 6,
+    },
+    liveTagChip: {
+      backgroundColor: colors.favoriteBg,
+      borderRadius: 8,
+      paddingHorizontal: 9,
+      paddingVertical: 3,
+    },
+    liveTagChipText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: colors.favorite,
+    },
+    capsuleActiveChip: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
       alignSelf: 'flex-start',
-      marginBottom: 10,
-      paddingVertical: 4,
+      backgroundColor: colors.favoriteBg,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 6,
+      marginBottom: 8,
     },
-    capsuleToggleText: {
-      fontSize: 12.5,
-      fontWeight: '600',
-      color: colors.subtext,
-    },
-    capsuleToggleTextActive: {
+    capsuleActiveChipText: {
+      fontSize: 11.5,
+      fontWeight: '700',
       color: colors.primary,
     },
     capsuleOptionsRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 8,
-      marginBottom: 14,
+      marginBottom: 10,
     },
     capsuleOptionChip: {
-      backgroundColor: colors.card,
-      borderRadius: 12,
+      backgroundColor: colors.background,
+      borderRadius: 10,
       paddingHorizontal: 12,
       paddingVertical: 8,
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
-      ...softShadow(colors),
     },
     capsuleOptionChipText: {
       fontSize: 12,
@@ -474,13 +572,10 @@ function getStyles(colors: ThemeColors) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      backgroundColor: colors.card,
-      borderRadius: 14,
+      backgroundColor: colors.background,
+      borderRadius: 12,
       padding: 12,
-      marginBottom: 14,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      ...softShadow(colors),
+      marginBottom: 10,
     },
     breathingSuggestionText: {
       flex: 1,
@@ -498,7 +593,7 @@ function getStyles(colors: ThemeColors) {
     },
     breathingSuggestionButton: {
       backgroundColor: colors.primary,
-      borderRadius: 10,
+      borderRadius: 9,
       paddingVertical: 8,
       paddingHorizontal: 14,
     },
@@ -507,99 +602,48 @@ function getStyles(colors: ThemeColors) {
       fontSize: 12.5,
       fontWeight: '700',
     },
-    breathingSuggestionDismiss: {
-      fontSize: 15,
-      color: colors.subtext,
-      padding: 4,
-    },
-    promptScroll: {
-      marginBottom: 12,
-    },
-    promptRow: {
-      gap: 8,
-      paddingRight: 8,
-    },
-    templateChip: {
+    composerToolbar: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
-      backgroundColor: colors.favoriteBg,
-      borderRadius: 14,
-      paddingHorizontal: 14,
-      paddingVertical: 9,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
+      justifyContent: 'space-between',
+      marginTop: 4,
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
     },
-    templateChipText: {
-      fontSize: 12.5,
-      color: colors.primary,
-      fontWeight: '700',
-    },
-    promptChip: {
-      backgroundColor: colors.card,
-      borderRadius: 14,
-      paddingHorizontal: 14,
-      paddingVertical: 9,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      maxWidth: 220,
-    },
-    promptChipText: {
-      fontSize: 12.5,
-      color: colors.text,
-      fontWeight: '500',
-    },
-    input: {
-      flex: 1,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: colors.border,
-      borderRadius: 16,
-      padding: 16,
-      fontSize: 16,
-      lineHeight: 23,
-      backgroundColor: colors.card,
-      color: colors.text,
-      ...cardShadow(colors),
-    },
-    liveTagRow: {
+    toolbarLeft: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 6,
-      marginTop: 10,
+      alignItems: 'center',
+      gap: 4,
     },
-    liveTagChip: {
-      backgroundColor: colors.favoriteBg,
+    toolbarIconButton: {
+      width: 34,
+      height: 34,
       borderRadius: 10,
-      paddingHorizontal: 9,
-      paddingVertical: 3,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.background,
     },
-    liveTagChipText: {
-      fontSize: 11,
-      fontWeight: '600',
-      color: colors.favorite,
+    toolbarRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
     },
     wordCount: {
       fontSize: 11.5,
+      fontWeight: '600',
       color: colors.subtext,
-      textAlign: 'right',
-      marginTop: 6,
     },
-    button: {
-      backgroundColor: colors.primary,
-      borderRadius: 14,
-      paddingVertical: 15,
+    sendButton: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
       alignItems: 'center',
-      marginTop: 16,
-      ...cardShadow(colors),
+      justifyContent: 'center',
+      backgroundColor: colors.primary,
     },
-    buttonDisabled: {
-      opacity: 0.6,
-    },
-    buttonText: {
-      color: colors.primaryText,
-      fontSize: 16,
-      fontWeight: '700',
-      letterSpacing: 0.2,
+    sendButtonIdle: {
+      opacity: 0.45,
     },
   });
 }

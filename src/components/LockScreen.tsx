@@ -140,8 +140,10 @@ function getStyles(colors: ThemeColors) {
     iconWrap: {
       width: 56,
       height: 56,
-      borderRadius: 28,
+      borderRadius: 16,
       backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 18,

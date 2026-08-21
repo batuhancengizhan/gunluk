@@ -1,22 +1,19 @@
 export interface BackgroundTheme {
   id: string;
   label: string;
-  colors: [string, string, ...string[]];
+  // null: düz, tek renkli zemin. string: o renkte yumuşak bir "glow" efekti.
+  glow: string | null;
 }
 
-// Muted, düşük doygunluklu tonlar — canlı/parlak yerine zarif ve sakin bir
-// his vermesi için kürasyonlu bir palet.
+// Higgsfield tarzı: tek marka rengi (lime) + birkaç tamamlayıcı teknoloji
+// tonu, koyu/açık zeminin üzerinde yumuşak bir ışıma (glow) olarak belirir.
 export const BACKGROUND_THEMES: BackgroundTheme[] = [
-  { id: 'none', label: 'Yok', colors: ['transparent', 'transparent'] },
-  { id: 'sunrise', label: 'Gün Doğumu', colors: ['#FBF0E8', '#F6DFCE', '#EFC9AC'] },
-  { id: 'ocean', label: 'Okyanus', colors: ['#EAF2F7', '#D6E6EE', '#BFD8E3'] },
-  { id: 'forest', label: 'Orman', colors: ['#EEF3EC', '#DCE8D8', '#C6DCC0'] },
-  { id: 'sky', label: 'Gökyüzü', colors: ['#F0F7FC', '#DCEBF6', '#C3DDF0'] },
-  { id: 'rainy', label: 'Yağmurlu', colors: ['#E8ECEF', '#D5DCE2', '#B9C4CE'] },
-  { id: 'dusk', label: 'Alacakaranlık', colors: ['#F0EDF7', '#E1DAF0', '#CEC1E6'] },
-  { id: 'lavender', label: 'Lavanta', colors: ['#F5F0F9', '#EBE1F5', '#DECBF0'] },
-  { id: 'sunset', label: 'Gün Batımı', colors: ['#FAECEC', '#F3D6D8', '#E9B9C0'] },
-  { id: 'earth', label: 'Toprak', colors: ['#FBEEE3', '#F0E3C8', '#DCE0B4'] },
+  { id: 'none', label: 'Düz', glow: null },
+  { id: 'lime', label: 'Lime', glow: '#D1FE17' },
+  { id: 'violet', label: 'Mor', glow: '#9B8CFF' },
+  { id: 'cyan', label: 'Camgöbeği', glow: '#5CE1E6' },
+  { id: 'rose', label: 'Gül', glow: '#FF6FA5' },
+  { id: 'amber', label: 'Amber', glow: '#FFB84D' },
 ];
 
 export function getBackgroundTheme(id: string): BackgroundTheme {

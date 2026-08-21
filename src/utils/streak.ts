@@ -33,14 +33,14 @@ export function calculateStreak(notes: Note[]): number {
 }
 
 const STREAK_MILESTONE_MESSAGES: Record<number, string> = {
-  3: 'Harika başlangıç! 3 gün üst üste yazdın 🌱',
-  7: 'Bir haftadır aralıksız yazıyorsun! 🔥',
-  14: '2 haftalık seri! Bu alışkanlık kök salıyor 🌿',
-  30: '30 gün! Bu artık gerçek bir alışkanlık oldu 🏆',
-  50: '50 günlük seri — inanılmaz bir tutarlılık ✨',
-  100: '100 gün! Bu gerçekten etkileyici 🎉',
-  200: '200 gün aralıksız — nadir bulunan bir azim 💎',
-  365: 'Tam bir yıl! Bu bir yaşam biçimi oldu 👑',
+  3: 'Harika başlangıç — 3 gün üst üste yazdın.',
+  7: 'Bir haftadır aralıksız yazıyorsun.',
+  14: '2 haftalık seri. Bu alışkanlık kök salıyor.',
+  30: '30 gün. Bu artık gerçek bir alışkanlık oldu.',
+  50: '50 günlük seri — inanılmaz bir tutarlılık.',
+  100: '100 gün. Bu gerçekten etkileyici.',
+  200: '200 gün aralıksız — nadir bulunan bir azim.',
+  365: 'Tam bir yıl. Bu bir yaşam biçimi oldu.',
 };
 
 // Seri tam olarak bir kilometre taşına ulaştığında kutlama mesajı döner,

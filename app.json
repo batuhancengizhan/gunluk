@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#C1592E",
+    "backgroundColor": "#0F1113",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.gunlukasistan.app"
@@ -14,7 +14,7 @@
     "android": {
       "package": "com.gunlukasistan.app",
       "adaptiveIcon": {
-        "backgroundColor": "#C1592E",
+        "backgroundColor": "#0F1113",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -29,7 +29,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "backgroundColor": "#C1592E",
+          "backgroundColor": "#0F1113",
           "imageWidth": 220
         }
       ],
@@ -37,7 +37,7 @@
         "expo-notifications",
         {
           "icon": "./assets/android-icon-monochrome.png",
-          "color": "#C1592E"
+          "color": "#D1FE17"
         }
       ],
       "expo-font",

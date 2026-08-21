@@ -48,11 +48,11 @@ function getStyles(colors: ThemeColors) {
     tile: {
       width: '31.5%',
       backgroundColor: colors.card,
-      borderRadius: 14,
+      borderRadius: 12,
       paddingVertical: 14,
       paddingHorizontal: 8,
       alignItems: 'center',
-      borderWidth: StyleSheet.hairlineWidth,
+      borderWidth: 1,
       borderColor: colors.border,
       ...softShadow(colors),
     },
