@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Note } from '../types/Note';
 import { getMoodTips } from './analysisService';
+import { WELLNESS_TIPS } from '../constants/wellnessTips';
 
 const REMINDER_ENABLED_KEY = '@gunluk_asistan/reminder_enabled';
 const REMINDER_HOUR_KEY = '@gunluk_asistan/reminder_hour';
@@ -16,16 +17,10 @@ const RECENT_NOTES_FOR_TIPS = 30;
 const WEEKDAY_COUNT = 7;
 
 // Yapay zeka ile üretilen öneriler henüz hiç oluşturulmadıysa veya ağ
-// hatası olduysa kullanılan, sabit genel iyi-olma-hali hatırlatmaları.
-const FALLBACK_MESSAGES = [
-  'Bugün nasıl geçti? Birkaç cümleyle günlüğüne not düşmeye ne dersin? 📝',
-  'Küçük bir mola ver ve bugünün hislerini günlüğüne yaz. 🌿',
-  'Kendine birkaç dakika ayır — bugünü nasıl hissettiğini yazmak iyi gelir. 💭',
-  'Bir bardak su içmeyi unutma. 💧',
-  'Bir cümle bile olsa, bugünü kaydetmeye değer. 🌙',
-  'Duygularını yazıya dökmek, onları anlamanın ilk adımıdır. 😊',
-  'Kısa bir yürüyüş zihnini tazeleyebilir. 🚶',
-];
+// hatası olduysa kullanılan, geniş bir sabit iyi-olma-hali hatırlatması
+// havuzu (bkz. constants/wellnessTips.ts) — 7 günden fazla kullanımda bile
+// aynı öneri tekrar etmesin diye kasıtlı olarak büyük tutuldu.
+const FALLBACK_MESSAGES = WELLNESS_TIPS;
 
 // Haftanın 7 gününe (Pazar..Cumartesi) sabit bildirim kimlikleri — içerik
 // (öneri metni) değişse de kimlikler sabit kalır, böylece her zaman aynı

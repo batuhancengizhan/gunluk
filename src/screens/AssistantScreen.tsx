@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -67,6 +68,7 @@ export default function AssistantScreen() {
     haptics.selection();
     setError(null);
     setInput('');
+    Keyboard.dismiss();
 
     const userMessage = createMessage('user', trimmed);
     const updated = await appendChatMessage(userMessage);
