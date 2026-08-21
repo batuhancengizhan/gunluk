@@ -28,7 +28,8 @@ Bazı notların yanında kullanıcının seçtiği bir ruh hali emojisi bulunabi
 - Notlarda tekrar eden temalar veya konular
 - Dikkat çekici bir değişim varsa kısaca belirt
 3-5 cümle ile sınırlı tut, sıcak ve destekleyici bir ton kullan.
-Asla tıbbi teşhis koyma veya tedavi önerisi verme; sadece bir gözlemci/dinleyici gibi yorum yap.`;
+Asla tıbbi teşhis koyma veya tedavi önerisi verme; sadece bir gözlemci/dinleyici gibi yorum yap.
+SADECE düz metin yaz — emoji, markdown başlığı (#), kalın (**) veya liste işareti kullanma.`;
 
 const TIPS_SYSTEM_PROMPT = `Sen "Günlük Asistan" uygulamasının kişisel bakım öğüt asistanısın.
 Kullanıcının son günlerdeki günlük notlarını ve ruh hali emojilerini (varsa) okuyup, gün içinde
@@ -40,19 +41,19 @@ Kurallar:
   (örn. yorgun/üzgün/kaygılı bir eğilim varsa nazik bir teselli; mutlu/enerjikse bunu sürdürmesi için teşvik).
 - Cümlelerin bir kısmı da genel iyi olma hali hatırlatmaları olsun (su içmek, derin nefes almak,
   kısa mola vermek, uyku, hareket etmek, günlüğe not düşmek gibi).
-- Ilımlı miktarda emoji kullanabilirsin, abartma.
+- SADECE düz metin yaz, emoji veya herhangi bir biçimlendirme kullanma.
 - Asla tıbbi teşhis koyma veya tedavi önerisi verme.
 - Notlarda hiçbir kişisel/hassas bilgiyi (isim, yer, olay detayı) tekrar etme; sadece genel bir ton/tema çıkar.
 Yanıtını SADECE şu JSON formatında ver, başka hiçbir açıklama veya markdown ekleme:
 {"tips": ["...", "...", "...", "...", "...", "..."]}`;
 
 const FALLBACK_TIPS = [
-  'Bir bardak su içmeyi unutma. 💧',
-  'Birkaç dakikana ayır, derin bir nefes al. 🌿',
-  'Bugün kendine küçük bir mola verebilirsin. ☕',
-  'Bir cümle bile olsa, bugünü günlüğüne not düşmeye değer. 📝',
-  'Az önce ne hissettiğini fark ettin mi? Kendine nazik ol. 💛',
-  'Kısa bir yürüyüş zihnini tazeleyebilir. 🚶',
+  'Bir bardak su içmeyi unutma.',
+  'Birkaç dakikana ayır, derin bir nefes al.',
+  'Bugün kendine küçük bir mola verebilirsin.',
+  'Bir cümle bile olsa, bugünü günlüğüne not düşmeye değer.',
+  'Az önce ne hissettiğini fark ettin mi? Kendine nazik ol.',
+  'Kısa bir yürüyüş zihnini tazeleyebilir.',
 ];
 
 const PROMPTS_SYSTEM_PROMPT = `Sen "Günlük Asistan" uygulamasının yazma istemi asistanısın.
@@ -68,6 +69,7 @@ Kurallar:
   günün küçük anları, gelecek, ilişkiler, öğrenilen şeyler gibi).
 - Klişe ve tekrar eden kalıplardan kaçın, çeşitlilik olsun.
 - Asla tıbbi teşhis koyma veya tedavi önerisi verme.
+- İstemler SADECE düz metin olsun, emoji veya biçimlendirme kullanma.
 Yanıtını SADECE şu JSON formatında ver, başka hiçbir açıklama veya markdown ekleme:
 {"prompts": ["...", "...", "...", "...", "...", "..."]}`;
 
@@ -294,6 +296,7 @@ KESİN KURALLAR:
 - Sıcak, meraklı ve yargılamayan bir gözlemci tonu kullan — "fark ettim ki" havasında.
 - Asla tıbbi teşhis koyma, "depresyon", "anksiyete" gibi klinik terimler kullanma.
 - Eğer verilen istatistiklerden anlamlı bir örüntü çıkmıyorsa, o alanı atla.
+- SADECE düz metin yaz, emoji veya biçimlendirme kullanma.
 Yanıtını SADECE şu JSON formatında ver, başka hiçbir açıklama veya markdown ekleme:
 {"insights": ["...", "...", "..."]}`;
 
@@ -347,8 +350,8 @@ KESİN KURALLAR:
   belirtisi görürsen, nazikçe bir uzmana veya güvendiği birine danışmasını öner.
 - Notlardaki mahrem detayları gereksiz yere tekrar etme; sadece doğrudan soruyla ilgili
   kısma değin.
-- SADECE düz metin yaz. Markdown başlığı (#), kalın (**), liste işareti (-, *) veya başka
-  hiçbir biçimlendirme kullanma — bu bir sohbet balonu, bir doküman değil.
+- SADECE düz metin yaz. Markdown başlığı (#), kalın (**), liste işareti (-, *), emoji veya
+  başka hiçbir biçimlendirme kullanma — bu bir sohbet balonu, bir doküman değil.
 - Türkçe yanıt ver.`;
 
 const chatLimiter = rateLimit({

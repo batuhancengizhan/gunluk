@@ -58,7 +58,7 @@ export async function scheduleTimeCapsuleNotification(note: Note): Promise<void>
   await Notifications.scheduleNotificationAsync({
     identifier: capsuleNotificationId(note.id),
     content: {
-      title: 'Geçmişten bir mektup 📮',
+      title: 'Geçmişten bir mektup',
       body: 'Bir süre önce kendine yazdığın bir notu okumaya hazır mısın?',
       sound: true,
     },

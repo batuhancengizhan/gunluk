@@ -97,7 +97,9 @@ export default function BreathingExercise({ visible, onClose }: Props) {
         <View style={styles.center}>
           {done ? (
             <>
-              <Text style={styles.doneEmoji}>🌿</Text>
+              <View style={styles.doneIconWrap}>
+                <Ionicons name="checkmark" size={26} color={colors.primaryText} />
+              </View>
               <Text style={styles.doneTitle}>Harika, kendine iyi baktın</Text>
               <Text style={styles.doneSubtitle}>Şimdi biraz daha sakin hissediyor olabilirsin.</Text>
               <TouchableOpacity style={styles.finishButton} onPress={onClose} activeOpacity={0.85}>
@@ -174,9 +176,14 @@ function getStyles(colors: ThemeColors) {
       lineHeight: 19,
       paddingHorizontal: 20,
     },
-    doneEmoji: {
-      fontSize: 44,
-      marginBottom: 12,
+    doneIconWrap: {
+      width: 52,
+      height: 52,
+      borderRadius: 15,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
     },
     doneTitle: {
       fontSize: 21,

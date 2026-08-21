@@ -45,9 +45,9 @@ export default function MoodTrendChart({ notes }: { notes: Note[] }) {
       <View style={styles.card}>
         <View style={styles.chartRow}>
           <View style={styles.axisLabels}>
-            <Text style={styles.axisEmoji}>🙂</Text>
-            <Text style={styles.axisEmoji}>😐</Text>
-            <Text style={styles.axisEmoji}>😔</Text>
+            <Text style={styles.axisLabel}>+</Text>
+            <Text style={styles.axisLabel}>0</Text>
+            <Text style={styles.axisLabel}>−</Text>
           </View>
           <Svg width="100%" height={CHART_HEIGHT} viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}>
             <Defs>
@@ -114,8 +114,11 @@ function getStyles(colors: ThemeColors) {
       justifyContent: 'space-between',
       paddingVertical: 6,
     },
-    axisEmoji: {
+    axisLabel: {
       fontSize: 13,
+      fontWeight: '700',
+      color: colors.subtext,
+      textAlign: 'center',
     },
     hint: {
       fontSize: 11,
