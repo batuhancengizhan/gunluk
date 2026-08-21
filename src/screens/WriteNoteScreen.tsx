@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -135,6 +136,8 @@ export default function WriteNoteScreen() {
         }
       }
 
+      inputRef.current?.blur();
+      Keyboard.dismiss();
       setText('');
       setMood(undefined);
       setPhotoUri(null);
