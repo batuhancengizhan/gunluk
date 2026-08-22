@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,6 +50,7 @@ export default function AssistantScreen() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const inputRef = useRef<TextInput>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -68,6 +70,7 @@ export default function AssistantScreen() {
     haptics.selection();
     setError(null);
     setInput('');
+    inputRef.current?.blur();
     Keyboard.dismiss();
 
     const userMessage = createMessage('user', trimmed);
@@ -109,9 +112,17 @@ export default function AssistantScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={styles.keyboardAvoider}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+    <TouchableWithoutFeedback
+      onPress={() => {
+        inputRef.current?.blur();
+        Keyboard.dismiss();
+      }}
+      accessible={false}
+    >
+    <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Asistan</Text>
         {messages.length > 0 && (
@@ -204,6 +215,7 @@ export default function AssistantScreen() {
 
       <View style={styles.composerRow}>
         <TextInput
+          ref={inputRef}
           style={styles.composerInput}
           placeholder="Bir şey sor..."
           placeholderTextColor={colors.subtext}
@@ -227,12 +239,17 @@ export default function AssistantScreen() {
           )}
         </TouchableOpacity>
       </View>
+    </View>
+    </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
 
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
+    keyboardAvoider: {
+      flex: 1,
+    },
     container: {
       flex: 1,
       backgroundColor: colors.background,

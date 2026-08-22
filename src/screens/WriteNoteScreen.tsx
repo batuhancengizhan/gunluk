@@ -10,6 +10,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { addNote, getNotes } from '../storage/notesStorage';
@@ -195,9 +196,17 @@ export default function WriteNoteScreen() {
     <View style={styles.gradientContainer}>
       <BackgroundArt themeId={backgroundTheme.id} style={StyleSheet.absoluteFill} />
       <KeyboardAvoidingView
-        style={styles.container}
+        style={styles.keyboardAvoider}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+      <TouchableWithoutFeedback
+        onPress={() => {
+          inputRef.current?.blur();
+          Keyboard.dismiss();
+        }}
+        accessible={false}
+      >
+        <View style={styles.container}>
         <View style={styles.headerRow}>
           <Text style={styles.title}>Bugün nasıl hissediyorsun?</Text>
           {streak > 0 && (
@@ -275,7 +284,7 @@ export default function WriteNoteScreen() {
             ref={inputRef}
             style={styles.composerInput}
             multiline
-            placeholder="Günlük notunu buraya yaz... (#etiket ekleyebilirsin)"
+            placeholder="Anlat, seni dinliyorum..."
             placeholderTextColor={colors.subtext}
             value={text}
             onChangeText={setText}
@@ -408,6 +417,8 @@ export default function WriteNoteScreen() {
             </View>
           </View>
         </View>
+        </View>
+      </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
       <BreathingExercise visible={breathingVisible} onClose={() => setBreathingVisible(false)} />
     </View>
@@ -417,6 +428,9 @@ export default function WriteNoteScreen() {
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     gradientContainer: {
+      flex: 1,
+    },
+    keyboardAvoider: {
       flex: 1,
     },
     container: {
